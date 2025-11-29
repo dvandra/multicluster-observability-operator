@@ -171,6 +171,7 @@ type PlatformIncidentDetectionSpec struct {
 
 type PlatformRightSizingRecommendationSpec struct {
 	// Enabled defines a flag to enable/disable the right-sizing feature for the Analytics.
+	// Default is true (enabled) when not specified.
 	//
 	// +optional
 	// +kubebuilder:validation:Optional

@@ -9,7 +9,10 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -59,6 +62,12 @@ func (r *AnalyticsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	// Ensure defaults are set/persisted for analytics right-sizing
+	instance, err = r.ensureRightSizingDefaults(ctx, instance, reqLogger)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// create rightsizing component
 	err = rightsizingctrl.CreateRightSizingComponent(ctx, r.Client, instance)
 	if err != nil {
@@ -66,6 +75,68 @@ func (r *AnalyticsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	return ctrl.Result{}, nil
+}
+
+// ensureRightSizingDefaults persists default right-sizing flags when absent and returns the (possibly updated) instance.
+func (r *AnalyticsReconciler) ensureRightSizingDefaults(ctx context.Context, instance *mcov1beta2.MultiClusterObservability, reqLogger logr.Logger) (*mcov1beta2.MultiClusterObservability, error) {
+	// Default-enable analytics right-sizing flags ONLY when absent on fresh installs.
+	// Persist defaults back to the MCO spec so users can later override to true/false explicitly.
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "observability.open-cluster-management.io",
+		Version: "v1beta2",
+		Kind:    "MultiClusterObservability",
+	})
+	if err := r.Client.Get(ctx, types.NamespacedName{Name: instance.GetName()}, u); err == nil {
+		changed := false
+		if _, found, err := unstructured.NestedBool(
+			u.Object, "spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled",
+		); err == nil && !found {
+			_ = unstructured.SetNestedField(
+				u.Object, true, "spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled",
+			)
+			changed = true
+		}
+		if _, found, err := unstructured.NestedBool(
+			u.Object, "spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled",
+		); err == nil && !found {
+			_ = unstructured.SetNestedField(
+				u.Object, true, "spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled",
+			)
+			changed = true
+		}
+		// Strip unrelated empty sections so only right-sizing analytics remain
+		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection"); found {
+			if m, ok := val.(map[string]any); ok && len(m) == 0 {
+				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection")
+				changed = true
+			}
+		}
+		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "logs"); found {
+			if m, ok := val.(map[string]any); ok && len(m) == 0 {
+				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "logs")
+				changed = true
+			}
+		}
+		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "metrics"); found {
+			if m, ok := val.(map[string]any); ok && len(m) == 0 {
+				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "metrics")
+				changed = true
+			}
+		}
+		if changed {
+			if err := r.Client.Update(ctx, u); err != nil {
+				return instance, fmt.Errorf("failed to persist default analytics right-sizing flags: %w", err)
+			}
+			reqLogger.Info("Defaulted analytics right-sizing flags to true (fresh install)")
+			// refresh typed instance so downstream logic sees updated flags
+			refreshed := &mcov1beta2.MultiClusterObservability{}
+			if err := r.Client.Get(ctx, types.NamespacedName{Name: instance.GetName()}, refreshed); err == nil {
+				instance = refreshed.DeepCopy()
+			}
+		}
+	}
+	return instance, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -63,6 +63,19 @@ var _ = Describe("RHACM4K-55205: Enable and teardown namespace right-sizing reco
 		}, 2*time.Minute, 10*time.Second).Should(Succeed())
 	})
 
+	It("Should persist namespace right-sizing enabled=true in the MCO spec (defaulted on fresh install)", func() {
+		Eventually(func() bool {
+			mco, err := dynClient.Resource(mcoGVR).
+				Get(context.TODO(), MCO_CR_NAME, metav1.GetOptions{})
+			if err != nil {
+				return false
+			}
+			enabled, found, err := unstructured.NestedBool(
+				mco.Object, "spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled")
+			return err == nil && found && enabled
+		}, 2*time.Minute, 10*time.Second).Should(BeTrue())
+	})
+
 	// Verify resources are created
 	It("Should find the rs-prom-rules-policy in the hub cluster namespace 'open-cluster-management-global-set'", func() {
 		Eventually(func() error {
@@ -243,6 +256,19 @@ var _ = Describe("RHACM4K-58751: Enable and teardown virtualization right-sizing
 				Update(context.TODO(), mco, metav1.UpdateOptions{})
 			return err
 		}, 2*time.Minute, 10*time.Second).Should(Succeed())
+	})
+
+	It("Should persist virtualization right-sizing enabled=true in the MCO spec (defaulted on fresh install)", func() {
+		Eventually(func() bool {
+			mco, err := dynClient.Resource(mcoGVR).
+				Get(context.TODO(), MCO_CR_NAME, metav1.GetOptions{})
+			if err != nil {
+				return false
+			}
+			enabled, found, err := unstructured.NestedBool(
+				mco.Object, "spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled")
+			return err == nil && found && enabled
+		}, 2*time.Minute, 10*time.Second).Should(BeTrue())
 	})
 
 	// Verify resources are created

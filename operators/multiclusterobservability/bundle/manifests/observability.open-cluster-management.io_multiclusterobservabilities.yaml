@@ -10090,8 +10090,9 @@ spec:
                               recommendation capabilities for the Analytics.
                             properties:
                               enabled:
-                                description: Enabled defines a flag to enable/disable
-                                  the right-sizing feature for the Analytics.
+                                description: |-
+                                  Enabled defines a flag to enable/disable the right-sizing feature for the Analytics.
+                                  Default is true (enabled) when not specified.
                                 type: boolean
                               namespaceBinding:
                                 description: |-
@@ -10104,8 +10105,9 @@ spec:
                               recommendation capabilities for the Analytics.
                             properties:
                               enabled:
-                                description: Enabled defines a flag to enable/disable
-                                  the right-sizing feature for the Analytics.
+                                description: |-
+                                  Enabled defines a flag to enable/disable the right-sizing feature for the Analytics.
+                                  Default is true (enabled) when not specified.
                                 type: boolean
                               namespaceBinding:
                                 description: |-
