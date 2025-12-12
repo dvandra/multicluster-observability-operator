@@ -43,23 +43,27 @@ var _ = Describe("RHACM4K-55205: Enable and teardown namespace right-sizing reco
 			testOptions.HubCluster.KubeContext,
 		)
 
-		By("Enabling namespace right-sizing recommendation in the MCO CR")
+		By("Waiting for namespace right-sizing recommendation to be enabled by default in the MCO CR")
 		Eventually(func() error {
 			mco, err := dynClient.Resource(mcoGVR).
 				Get(context.TODO(), MCO_CR_NAME, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
-			if err := unstructured.SetNestedField(
+			enabled, found, err := unstructured.NestedBool(
 				mco.Object,
-				true,
 				"spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled",
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
-			_, err = dynClient.Resource(mcoGVR).
-				Update(context.TODO(), mco, metav1.UpdateOptions{})
-			return err
+			if !found {
+				return fmt.Errorf("namespaceRightSizingRecommendation.enabled not found yet")
+			}
+			if !enabled {
+				return fmt.Errorf("namespaceRightSizingRecommendation.enabled is false, expected true")
+			}
+			return nil
 		}, 2*time.Minute, 10*time.Second).Should(Succeed())
 	})
 
@@ -238,23 +242,27 @@ var _ = Describe("RHACM4K-58751: Enable and teardown virtualization right-sizing
 			)
 		}
 
-		By("Enabling virtualization right-sizing recommendation in the MCO CR")
+		By("Waiting for virtualization right-sizing recommendation to be enabled by default in the MCO CR")
 		Eventually(func() error {
 			mco, err := dynClient.Resource(mcoGVR).
 				Get(context.TODO(), MCO_CR_NAME, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
-			if err := unstructured.SetNestedField(
+			enabled, found, err := unstructured.NestedBool(
 				mco.Object,
-				true,
 				"spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled",
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
-			_, err = dynClient.Resource(mcoGVR).
-				Update(context.TODO(), mco, metav1.UpdateOptions{})
-			return err
+			if !found {
+				return fmt.Errorf("virtualizationRightSizingRecommendation.enabled not found yet")
+			}
+			if !enabled {
+				return fmt.Errorf("virtualizationRightSizingRecommendation.enabled is false, expected true")
+			}
+			return nil
 		}, 2*time.Minute, 10*time.Second).Should(Succeed())
 	})
 
