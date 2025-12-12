@@ -38,6 +38,18 @@ metadata:
             "name": "observability"
           },
           "spec": {
+            "capabilities": {
+              "platform": {
+                "analytics": {
+                  "namespaceRightSizingRecommendation": {
+                    "enabled": true
+                  },
+                  "virtualizationRightSizingRecommendation": {
+                    "enabled": true
+                  }
+                }
+              }
+            },
             "observabilityAddonSpec": {},
             "storageConfig": {
               "metricObjectStorage": {
@@ -49,7 +61,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2025-11-19T13:19:24Z"
+    createdAt: "2025-12-12T19:01:08Z"
     operators.operatorframework.io/builder: operator-sdk-unknown
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: multicluster-observability-operator.v0.1.0

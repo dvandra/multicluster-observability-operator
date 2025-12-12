@@ -3,6 +3,13 @@ kind: MultiClusterObservability
 metadata:
   name: observability
 spec:
+  capabilities:
+    platform:
+      analytics:
+        namespaceRightSizingRecommendation:
+          enabled: true
+        virtualizationRightSizingRecommendation:
+          enabled: true
   observabilityAddonSpec: {}
   storageConfig:
     metricObjectStorage:

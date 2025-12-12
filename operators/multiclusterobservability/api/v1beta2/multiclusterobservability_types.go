@@ -5,6 +5,8 @@
 package v1beta2
 
 import (
+	"encoding/json"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -139,6 +141,28 @@ type PlatformCapabilitiesSpec struct {
 	Analytics PlatformAnalyticsSpec `json:"analytics,omitempty"`
 }
 
+// MarshalJSON ensures only non-empty platform capability sections are emitted when using value structs.
+func (p PlatformCapabilitiesSpec) MarshalJSON() ([]byte, error) {
+	payload := map[string]any{}
+
+	if p.Logs.Collection.Enabled {
+		payload["logs"] = p.Logs
+	}
+	if p.Metrics.Default.Enabled || p.Metrics.UI.Enabled {
+		payload["metrics"] = p.Metrics
+	}
+
+	analyticsBytes, err := json.Marshal(p.Analytics)
+	if err == nil {
+		tmp := map[string]any{}
+		if err := json.Unmarshal(analyticsBytes, &tmp); err == nil && len(tmp) > 0 {
+			payload["analytics"] = tmp
+		}
+	}
+
+	return json.Marshal(payload)
+}
+
 type PlatformAnalyticsSpec struct {
 	// Incident detecion defines the configuration spec for the incident detection
 	// feature delivered via the cluster observability operator.
@@ -161,6 +185,27 @@ type PlatformAnalyticsSpec struct {
 	VirtualizationRightSizingRecommendation PlatformRightSizingRecommendationSpec `json:"virtualizationRightSizingRecommendation,omitempty"`
 }
 
+// MarshalJSON ensures only non-empty analytics fields are emitted when using value structs.
+func (p PlatformAnalyticsSpec) MarshalJSON() ([]byte, error) {
+	analytics := map[string]any{}
+
+	if p.IncidentDetection.Enabled {
+		analytics["incidentDetection"] = p.IncidentDetection
+	}
+	if p.NamespaceRightSizingRecommendation.Enabled || p.NamespaceRightSizingRecommendation.NamespaceBinding != "" {
+		analytics["namespaceRightSizingRecommendation"] = p.NamespaceRightSizingRecommendation
+	}
+	if p.VirtualizationRightSizingRecommendation.Enabled || p.VirtualizationRightSizingRecommendation.NamespaceBinding != "" {
+		analytics["virtualizationRightSizingRecommendation"] = p.VirtualizationRightSizingRecommendation
+	}
+
+	if len(analytics) == 0 {
+		return json.Marshal(map[string]any{})
+	}
+
+	return json.Marshal(analytics)
+}
+
 type PlatformIncidentDetectionSpec struct {
 	// Enabled defines a flag to enable/disable the incident detection.
 	//
@@ -174,6 +219,7 @@ type PlatformRightSizingRecommendationSpec struct {
 	//
 	// +optional
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// NamespaceBinding defines the namespace where all the required resources are created.
