@@ -13,7 +13,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -155,108 +154,7 @@ func TestAnalyticsReconciler_DefaultsPersistedWhenAbsent(t *testing.T) {
 	require.True(t, persisted.Spec.Capabilities.Platform.Analytics.VirtualizationRightSizingRecommendation.Enabled)
 }
 
-// Verifies unrelated analytics/platform sections are stripped when defaults are applied (empty sections removed).
-func TestAnalyticsReconciler_StripsUnrelatedSections(t *testing.T) {
-	scheme := setupTestScheme(t)
-
-	raw := &unstructured.Unstructured{
-		Object: map[string]any{
-			"apiVersion": "observability.open-cluster-management.io/v1beta2",
-			"kind":       "MultiClusterObservability",
-			"metadata": map[string]any{
-				"name": "observability",
-			},
-			"spec": map[string]any{
-				"capabilities": map[string]any{
-					"platform": map[string]any{
-						"analytics": map[string]any{
-							"incidentDetection": map[string]any{},
-						},
-						"logs":    map[string]any{},
-						"metrics": map[string]any{},
-					},
-				},
-			},
-		},
-	}
-	raw.SetGroupVersionKind(raw.GroupVersionKind())
-
-	c := fake.NewClientBuilder().
-		WithScheme(scheme).
-		WithObjects(raw).
-		Build()
-
-	r := &AnalyticsReconciler{Client: c, Scheme: scheme}
-	_, err := r.ensureRightSizingDefaults(context.TODO(), &mcov1beta2.MultiClusterObservability{ObjectMeta: metav1.ObjectMeta{Name: "observability"}}, logf.Log.WithName("test"))
-	require.NoError(t, err)
-
-	got := &unstructured.Unstructured{}
-	got.SetGroupVersionKind(raw.GroupVersionKind())
-	require.NoError(t, c.Get(context.TODO(), types.NamespacedName{Name: "observability"}, got))
-
-	_, foundIncident, _ := unstructured.NestedFieldNoCopy(got.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection")
-	_, foundLogs, _ := unstructured.NestedFieldNoCopy(got.Object, "spec", "capabilities", "platform", "logs")
-	_, foundMetrics, _ := unstructured.NestedFieldNoCopy(got.Object, "spec", "capabilities", "platform", "metrics")
-
-	require.False(t, foundIncident)
-	require.False(t, foundLogs)
-	require.False(t, foundMetrics)
-}
-
-// Verifies we do NOT strip non-empty unrelated sections.
-func TestAnalyticsReconciler_PreservesNonEmptyUnrelatedSections(t *testing.T) {
-	scheme := setupTestScheme(t)
-
-	raw := &unstructured.Unstructured{
-		Object: map[string]any{
-			"apiVersion": "observability.open-cluster-management.io/v1beta2",
-			"kind":       "MultiClusterObservability",
-			"metadata": map[string]any{
-				"name": "observability",
-			},
-			"spec": map[string]any{
-				"capabilities": map[string]any{
-					"platform": map[string]any{
-						"analytics": map[string]any{
-							"incidentDetection": map[string]any{"enabled": false},
-						},
-						"logs": map[string]any{
-							"collection": map[string]any{"enabled": true},
-						},
-						"metrics": map[string]any{
-							"default": map[string]any{"enabled": true},
-						},
-					},
-				},
-			},
-		},
-	}
-	raw.SetGroupVersionKind(raw.GroupVersionKind())
-
-	c := fake.NewClientBuilder().
-		WithScheme(scheme).
-		WithObjects(raw).
-		Build()
-
-	r := &AnalyticsReconciler{Client: c, Scheme: scheme}
-	_, err := r.ensureRightSizingDefaults(context.TODO(), &mcov1beta2.MultiClusterObservability{ObjectMeta: metav1.ObjectMeta{Name: "observability"}}, logf.Log.WithName("test"))
-	require.NoError(t, err)
-
-	got := &unstructured.Unstructured{}
-	got.SetGroupVersionKind(raw.GroupVersionKind())
-	require.NoError(t, c.Get(context.TODO(), types.NamespacedName{Name: "observability"}, got))
-
-	incident, foundIncident, _ := unstructured.NestedMap(got.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection")
-	logs, foundLogs, _ := unstructured.NestedMap(got.Object, "spec", "capabilities", "platform", "logs")
-	metrics, foundMetrics, _ := unstructured.NestedMap(got.Object, "spec", "capabilities", "platform", "metrics")
-
-	require.True(t, foundIncident)
-	require.True(t, foundLogs)
-	require.True(t, foundMetrics)
-	require.Equal(t, map[string]any{"enabled": false}, incident)
-	require.Contains(t, logs, "collection")
-	require.Contains(t, metrics, "default")
-}
+// (Removed) strip/preserve tests: controller now only defaults right-sizing flags and does not mutate other fields.
 
 // Verifies reconcile is a no-op (no error) when no MCO CRs exist
 func TestAnalyticsReconciler_NoMCO(t *testing.T) {

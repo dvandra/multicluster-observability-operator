@@ -28,6 +28,12 @@ import (
 
 var log = logf.Log.WithName("controller_rightsizing")
 
+var mcoGVK = schema.GroupVersionKind{
+	Group:   "observability.open-cluster-management.io",
+	Version: "v1beta2",
+	Kind:    "MultiClusterObservability",
+}
+
 // AnalyticsReconciler reconciles a MultiClusterObservability object
 type AnalyticsReconciler struct {
 	Client client.Client
@@ -45,7 +51,7 @@ func (r *AnalyticsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Fetch the MultiClusterObservability instance
 	mcoList := &mcov1beta2.MultiClusterObservabilityList{}
-	err := r.Client.List(context.TODO(), mcoList)
+	err := r.Client.List(ctx, mcoList)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to list MultiClusterObservability custom resources: %w", err)
 	}
@@ -82,48 +88,20 @@ func (r *AnalyticsReconciler) ensureRightSizingDefaults(ctx context.Context, ins
 	// Default-enable analytics right-sizing flags ONLY when absent on fresh installs.
 	// Persist defaults back to the MCO spec so users can later override to true/false explicitly.
 	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "observability.open-cluster-management.io",
-		Version: "v1beta2",
-		Kind:    "MultiClusterObservability",
-	})
-	if err := r.Client.Get(ctx, types.NamespacedName{Name: instance.GetName()}, u); err == nil {
+	u.SetGroupVersionKind(mcoGVK)
+	key := types.NamespacedName{Name: instance.GetName()}
+
+	if err := r.Client.Get(ctx, key, u); err == nil {
 		changed := false
-		if _, found, err := unstructured.NestedBool(
-			u.Object, "spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled",
-		); err == nil && !found {
-			_ = unstructured.SetNestedField(
-				u.Object, true, "spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled",
-			)
-			changed = true
-		}
-		if _, found, err := unstructured.NestedBool(
-			u.Object, "spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled",
-		); err == nil && !found {
-			_ = unstructured.SetNestedField(
-				u.Object, true, "spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled",
-			)
-			changed = true
-		}
-		// Strip unrelated empty sections so only right-sizing analytics remain
-		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection"); found {
-			if m, ok := val.(map[string]any); ok && len(m) == 0 {
-				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "analytics", "incidentDetection")
-				changed = true
-			}
-		}
-		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "logs"); found {
-			if m, ok := val.(map[string]any); ok && len(m) == 0 {
-				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "logs")
-				changed = true
-			}
-		}
-		if val, found, _ := unstructured.NestedFieldNoCopy(u.Object, "spec", "capabilities", "platform", "metrics"); found {
-			if m, ok := val.(map[string]any); ok && len(m) == 0 {
-				_ = unstructured.RemoveNestedField(u.Object, "spec", "capabilities", "platform", "metrics")
-				changed = true
-			}
-		}
+		changed = ensureNestedBoolDefault(u.Object, true,
+			[]string{"spec", "capabilities", "platform", "analytics", "namespaceRightSizingRecommendation", "enabled"},
+			changed,
+		)
+		changed = ensureNestedBoolDefault(u.Object, true,
+			[]string{"spec", "capabilities", "platform", "analytics", "virtualizationRightSizingRecommendation", "enabled"},
+			changed,
+		)
+
 		if changed {
 			if err := r.Client.Update(ctx, u); err != nil {
 				return instance, fmt.Errorf("failed to persist default analytics right-sizing flags: %w", err)
@@ -131,12 +109,21 @@ func (r *AnalyticsReconciler) ensureRightSizingDefaults(ctx context.Context, ins
 			reqLogger.Info("Defaulted analytics right-sizing flags to true (fresh install)")
 			// refresh typed instance so downstream logic sees updated flags
 			refreshed := &mcov1beta2.MultiClusterObservability{}
-			if err := r.Client.Get(ctx, types.NamespacedName{Name: instance.GetName()}, refreshed); err == nil {
+			if err := r.Client.Get(ctx, key, refreshed); err == nil {
 				instance = refreshed.DeepCopy()
 			}
 		}
 	}
 	return instance, nil
+}
+
+func ensureNestedBoolDefault(obj map[string]any, defaultValue bool, fields []string, changed bool) bool {
+	_, found, err := unstructured.NestedBool(obj, fields...)
+	if err != nil || found {
+		return changed
+	}
+	_ = unstructured.SetNestedField(obj, defaultValue, fields...)
+	return true
 }
 
 // SetupWithManager sets up the controller with the Manager.
