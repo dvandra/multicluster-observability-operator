@@ -74,6 +74,16 @@ func GeneratePrometheusRule(configData rsutility.RSNamespaceConfigMapData) (moni
 					Rules:    buildNamespaceRules1d(configData, ruleWithLabels),
 				},
 				{
+					Name:     "acm-right-sizing-workload-5m.rules",
+					Interval: &duration5m,
+					Rules:    buildWorkloadRules5m(nsFilter, rule),
+				},
+				{
+					Name:     "acm-right-sizing-workload-1d.rules",
+					Interval: &duration1d,
+					Rules:    buildWorkloadRules1d(configData, ruleWithLabels),
+				},
+				{
 					Name:     "acm-right-sizing-cluster-5m.rule",
 					Interval: &duration5m,
 					Rules:    buildClusterRules5m(nsFilter, rule),
@@ -138,6 +148,188 @@ func buildNamespaceRules5m(
 				`max_over_time(sum(container_memory_working_set_bytes{`+
 					`%s, container!=""}) by (namespace)[5m:])`,
 				nsFilter,
+			),
+		),
+	}
+}
+
+func buildWorkloadRules5m(
+	nsFilter string,
+	rule func(string, string) monitoringv1.Rule,
+) []monitoringv1.Rule {
+	// We only support stable workload types:
+	// - Deployment (via ReplicaSet owner)
+	// - StatefulSet / DaemonSet (direct pod owner)
+	//
+	// All filters remain namespace-scoped via nsFilter and (optionally) labelJoin, consistent with namespace right-sizing.
+	podWorkloadRelabelExpr := fmt.Sprintf(
+		`max by (namespace, pod, workload, workload_type) (
+		  (
+		    label_replace(
+		      label_replace(
+		        kube_pod_owner{%s, owner_kind=~"StatefulSet|DaemonSet"},
+		        "workload", "$1", "owner_name", "(.*)"
+		      ),
+		      "workload_type", "$1", "owner_kind", "(.*)"
+		    )
+		  )
+		  or
+		  (
+		    label_replace(
+		      label_replace(
+		        (
+		          label_replace(
+		            kube_pod_owner{%s, owner_kind="ReplicaSet"},
+		            "replicaset", "$1", "owner_name", "(.*)"
+		          )
+		          * on (namespace, replicaset) group_left(deployment)
+		            label_replace(
+		              kube_replicaset_owner{%s, owner_kind="Deployment"},
+		              "deployment", "$1", "owner_name", "(.*)"
+		            )
+		        ),
+		        "workload", "$1", "deployment", "(.*)"
+		      ),
+		      "workload_type", "Deployment", "workload", ".*"
+		    )
+		  )
+		)`,
+		nsFilter, nsFilter, nsFilter,
+	)
+
+	return []monitoringv1.Rule{
+		rule("acm_rs:pod_workload:relabel:5m", podWorkloadRelabelExpr),
+		rule(
+			"acm_rs:pod:cpu_request:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, pod, workload, workload_type) (
+				  kube_pod_container_resource_requests{%s, resource="cpu", container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:pod:cpu_usage:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, pod, workload, workload_type) (
+				  node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{%s, container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:pod:memory_request:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, pod, workload, workload_type) (
+				  kube_pod_container_resource_requests{%s, resource="memory", container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:pod:memory_usage:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, pod, workload, workload_type) (
+				  container_memory_working_set_bytes{%s, container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:workload:cpu_request:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, workload, workload_type) (
+				  kube_pod_container_resource_requests{%s, resource="cpu", container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:workload:cpu_usage:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, workload, workload_type) (
+				  node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{%s, container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:workload:memory_request:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, workload, workload_type) (
+				  kube_pod_container_resource_requests{%s, resource="memory", container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:workload:memory_usage:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (namespace, workload, workload_type) (
+				  container_memory_working_set_bytes{%s, container!=""}
+				  * on (namespace, pod) group_left(workload, workload_type)
+				    acm_rs:pod_workload:relabel:5m
+				)[5m:])`,
+				nsFilter,
+			),
+		),
+	}
+}
+
+func buildWorkloadRules1d(
+	configData rsutility.RSNamespaceConfigMapData,
+	ruleWithLabels func(string, string) monitoringv1.Rule,
+) []monitoringv1.Rule {
+	rp := configData.PrometheusRuleConfig.RecommendationPercentage
+	return []monitoringv1.Rule{
+		ruleWithLabels("acm_rs:pod:cpu_request", `max_over_time(acm_rs:pod:cpu_request:5m[1d])`),
+		ruleWithLabels("acm_rs:pod:cpu_usage", `max_over_time(acm_rs:pod:cpu_usage:5m[1d])`),
+		ruleWithLabels(
+			"acm_rs:pod:cpu_recommendation",
+			fmt.Sprintf(
+				`max_over_time(acm_rs:pod:cpu_usage:5m[1d]) * (%d/100)`,
+				rp,
+			),
+		),
+		ruleWithLabels("acm_rs:pod:memory_request", `max_over_time(acm_rs:pod:memory_request:5m[1d])`),
+		ruleWithLabels("acm_rs:pod:memory_usage", `max_over_time(acm_rs:pod:memory_usage:5m[1d])`),
+		ruleWithLabels(
+			"acm_rs:pod:memory_recommendation",
+			fmt.Sprintf(
+				`max_over_time(acm_rs:pod:memory_usage:5m[1d]) * (%d/100)`,
+				rp,
+			),
+		),
+		ruleWithLabels("acm_rs:workload:cpu_request", `max_over_time(acm_rs:workload:cpu_request:5m[1d])`),
+		ruleWithLabels("acm_rs:workload:cpu_usage", `max_over_time(acm_rs:workload:cpu_usage:5m[1d])`),
+		ruleWithLabels(
+			"acm_rs:workload:cpu_recommendation",
+			fmt.Sprintf(
+				`max_over_time(acm_rs:workload:cpu_usage:5m[1d]) * (%d/100)`,
+				rp,
+			),
+		),
+		ruleWithLabels("acm_rs:workload:memory_request", `max_over_time(acm_rs:workload:memory_request:5m[1d])`),
+		ruleWithLabels("acm_rs:workload:memory_usage", `max_over_time(acm_rs:workload:memory_usage:5m[1d])`),
+		ruleWithLabels(
+			"acm_rs:workload:memory_recommendation",
+			fmt.Sprintf(
+				`max_over_time(acm_rs:workload:memory_usage:5m[1d]) * (%d/100)`,
+				rp,
 			),
 		),
 	}

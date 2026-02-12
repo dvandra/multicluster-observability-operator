@@ -227,6 +227,18 @@ var _ = Describe("RHACM4K-55205: Enable and teardown namespace right-sizing reco
 				"acm_rs:namespace:memory_request",
 				"acm_rs:namespace:memory_usage",
 				"acm_rs:namespace:memory_recommendation",
+				"acm_rs:pod:cpu_request",
+				"acm_rs:pod:cpu_usage",
+				"acm_rs:pod:cpu_recommendation",
+				"acm_rs:pod:memory_request",
+				"acm_rs:pod:memory_usage",
+				"acm_rs:pod:memory_recommendation",
+				"acm_rs:workload:cpu_request",
+				"acm_rs:workload:cpu_usage",
+				"acm_rs:workload:cpu_recommendation",
+				"acm_rs:workload:memory_request",
+				"acm_rs:workload:memory_usage",
+				"acm_rs:workload:memory_recommendation",
 				"acm_rs:cluster:cpu_request",
 				"acm_rs:cluster:cpu_usage",
 				"acm_rs:cluster:cpu_recommendation",
@@ -252,6 +264,17 @@ var _ = Describe("RHACM4K-55205: Enable and teardown namespace right-sizing reco
 			return err
 		}, 2*time.Minute, 10*time.Second).Should(Succeed(),
 			"Expected ConfigMap 'grafana-dashboard-acm-right-sizing-namespaces' to exist in namespace 'open-cluster-management-observability'",
+		)
+	})
+
+	It("Should create the Grafana dashboard ConfigMap 'grafana-dashboard-acm-right-sizing-workloads-pods' in namespace 'open-cluster-management-observability'", func() {
+		Eventually(func() error {
+			_, err := dynClient.Resource(configMapGVR).
+				Namespace("open-cluster-management-observability").
+				Get(context.TODO(), "grafana-dashboard-acm-right-sizing-workloads-pods", metav1.GetOptions{})
+			return err
+		}, 2*time.Minute, 10*time.Second).Should(Succeed(),
+			"Expected ConfigMap 'grafana-dashboard-acm-right-sizing-workloads-pods' to exist in namespace 'open-cluster-management-observability'",
 		)
 	})
 
