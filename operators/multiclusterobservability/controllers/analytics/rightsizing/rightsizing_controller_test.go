@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	mcov1beta2 "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/api/v1beta2"
-	rsnamespace "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-namespace"
-	rsutility "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-utility"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +38,10 @@ func newTestMCO(binding string, enabled bool) *mcov1beta2.MultiClusterObservabil
 							Enabled:          enabled,
 							NamespaceBinding: binding,
 						},
+						VirtualizationRightSizingRecommendation: mcov1beta2.PlatformRightSizingRecommendationSpec{
+							Enabled:          enabled,
+							NamespaceBinding: binding,
+						},
 					},
 				},
 			},
@@ -52,28 +54,9 @@ func TestCreateRightSizingComponent_FeatureEnabled(t *testing.T) {
 
 	mco := newTestMCO("custom-ns", true)
 
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      rsnamespace.ConfigMapName,
-			Namespace: rsutility.DefaultNamespace,
-		},
-		Data: map[string]string{
-			"config.yaml": `
-				prometheusRuleConfig:
-				namespaceFilterCriteria:
-					inclusionCriteria: ["ns1"]
-					exclusionCriteria: []
-				labelFilterCriteria: []
-				recommendationPercentage: 110
-				placementConfiguration:
-				predicates: []
-				`,
-		},
-	}
-
 	client := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithObjects(mco, configMap).
+		WithObjects(mco).
 		Build()
 
 	err := CreateRightSizingComponent(context.TODO(), client, mco)

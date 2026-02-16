@@ -143,11 +143,15 @@ func (r *AnalyticsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	mcoPred := mcoctrl.GetMCOPredicateFunc()
 	cmNamespaceRSPred := rightsizingctrl.GetNamespaceRSConfigMapPredicateFunc(ctx, c)
 	cmVirtualizationRSPred := rightsizingctrl.GetVirtualizationRSConfigMapPredicateFunc(ctx, c)
+	cmWorkloadRSPred := rightsizingctrl.GetWorkloadRSConfigMapPredicateFunc(ctx, c)
+	cmGPURSPred := rightsizingctrl.GetGPURSConfigMapPredicateFunc(ctx, c)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("rightsizing").
 		For(&mcov1beta2.MultiClusterObservability{}, builder.WithPredicates(mcoPred)).
 		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmNamespaceRSPred)).
 		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmVirtualizationRSPred)).
+		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmWorkloadRSPred)).
+		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmGPURSPred)).
 		Complete(r)
 }

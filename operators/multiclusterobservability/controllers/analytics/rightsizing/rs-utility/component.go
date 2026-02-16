@@ -24,6 +24,10 @@ type ComponentType string
 const (
 	ComponentTypeNamespace      ComponentType = "namespace"
 	ComponentTypeVirtualization ComponentType = "virtualization"
+	// ComponentTypeWorkload manages workload + pod right-sizing policies (single policy, feature-gated by the
+	// workloadRightSizingRecommendation and/or podRightSizingRecommendation flags).
+	ComponentTypeWorkload ComponentType = "workload"
+	ComponentTypeGPU      ComponentType = "gpu"
 )
 
 // ComponentConfig holds configuration for a right-sizing component
@@ -58,6 +62,13 @@ func GetComponentConfig(mco *mcov1beta2.MultiClusterObservability, componentType
 	case ComponentTypeVirtualization:
 		enabled := mco.Spec.Capabilities.Platform.Analytics.VirtualizationRightSizingRecommendation.Enabled
 		binding := mco.Spec.Capabilities.Platform.Analytics.VirtualizationRightSizingRecommendation.NamespaceBinding
+		return enabled, binding, nil
+	case ComponentTypeWorkload:
+		combined := mco.Spec.Capabilities.Platform.Analytics.WorkloadPodRightSizingRecommendation
+		return combined.Enabled, combined.NamespaceBinding, nil
+	case ComponentTypeGPU:
+		enabled := mco.Spec.Capabilities.Platform.Analytics.GPURightSizingRecommendation.Enabled
+		binding := mco.Spec.Capabilities.Platform.Analytics.GPURightSizingRecommendation.NamespaceBinding
 		return enabled, binding, nil
 	default:
 		return false, "", fmt.Errorf("unknown component type: %s", componentType)
@@ -95,6 +106,9 @@ func HandleComponentRightSizing(
 		return nil
 	}
 
+	// Track previous enabled state so we can apply resources on transitions to enabled.
+	wasEnabled := state.Enabled
+
 	// Set the flag if namespaceBindingUpdated
 	namespaceBindingUpdated := state.Namespace != newBinding && state.Enabled
 
@@ -110,9 +124,13 @@ func HandleComponentRightSizing(
 		return err
 	}
 
-	if namespaceBindingUpdated {
-		// Clean up resources except config map to update NamespaceBinding
-		CleanupComponentResources(ctx, c, componentConfig, existingNamespace, true)
+	// Apply the config once when the component is enabled (covers the case where the ConfigMap already exists
+	// and thus won't emit a create event), and also when namespaceBinding changes.
+	if !wasEnabled || namespaceBindingUpdated {
+		if namespaceBindingUpdated {
+			// Clean up resources except config map to update NamespaceBinding
+			CleanupComponentResources(ctx, c, componentConfig, existingNamespace, true)
+		}
 
 		// Get configmap
 		cm := &corev1.ConfigMap{}
@@ -126,7 +144,6 @@ func HandleComponentRightSizing(
 			return fmt.Errorf("rs - failed to extract config data: %w", err)
 		}
 
-		// If NamespaceBinding has been updated apply the Policy Placement Placementbinding again
 		if err := componentConfig.ApplyChangesFunc(ctx, c, configData); err != nil {
 			return fmt.Errorf("rs - failed to apply configmap changes: %w", err)
 		}

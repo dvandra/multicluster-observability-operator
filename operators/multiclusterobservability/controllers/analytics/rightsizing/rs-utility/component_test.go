@@ -55,6 +55,16 @@ func newTestMCOForComponent(componentType ComponentType, binding string, enabled
 			Enabled:          enabled,
 			NamespaceBinding: binding,
 		}
+	case ComponentTypeWorkload:
+		mco.Spec.Capabilities.Platform.Analytics.WorkloadPodRightSizingRecommendation = mcov1beta2.PlatformRightSizingRecommendationSpec{
+			Enabled:          enabled,
+			NamespaceBinding: binding,
+		}
+	case ComponentTypeGPU:
+		mco.Spec.Capabilities.Platform.Analytics.GPURightSizingRecommendation = mcov1beta2.PlatformRightSizingRecommendationSpec{
+			Enabled:          enabled,
+			NamespaceBinding: binding,
+		}
 	}
 
 	return mco
@@ -66,8 +76,16 @@ func mockApplyChangesFunc(ctx context.Context, c client.Client, configData RSNam
 
 func mockGetDefaultConfigFunc() map[string]string {
 	return map[string]string{
-		"prometheusRuleConfig":   "test-rule-config",
-		"placementConfiguration": "test-placement-config",
+		"prometheusRuleConfig": `
+namespaceFilterCriteria:
+  exclusionCriteria:
+    - openshift.*
+labelFilterCriteria: []
+recommendationPercentage: 110
+`,
+		"placementConfiguration": `
+predicates: []
+`,
 	}
 }
 
@@ -87,6 +105,24 @@ func TestGetComponentConfig_Virtualization(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, enabled)
 	assert.Equal(t, "virt-namespace", binding)
+}
+
+func TestGetComponentConfig_Workload_EnabledByWorkloadFlag(t *testing.T) {
+	mco := newTestMCOForComponent(ComponentTypeWorkload, "workload-ns", true)
+
+	enabled, binding, err := GetComponentConfig(mco, ComponentTypeWorkload)
+	require.NoError(t, err)
+	assert.True(t, enabled)
+	assert.Equal(t, "workload-ns", binding)
+}
+
+func TestGetComponentConfig_GPU(t *testing.T) {
+	mco := newTestMCOForComponent(ComponentTypeGPU, "gpu-ns", true)
+
+	enabled, binding, err := GetComponentConfig(mco, ComponentTypeGPU)
+	require.NoError(t, err)
+	assert.True(t, enabled)
+	assert.Equal(t, "gpu-ns", binding)
 }
 
 func TestGetComponentConfig_PlatformNotConfigured(t *testing.T) {
@@ -149,6 +185,7 @@ func TestHandleComponentRightSizing_FeatureEnabled(t *testing.T) {
 	scheme := setupComponentTestScheme(t)
 	mco := newTestMCOForComponent(ComponentTypeNamespace, "custom-ns", true)
 
+	applyCalled := 0
 	componentConfig := ComponentConfig{
 		ComponentType:            ComponentTypeNamespace,
 		ConfigMapName:            "test-config",
@@ -157,7 +194,10 @@ func TestHandleComponentRightSizing_FeatureEnabled(t *testing.T) {
 		PrometheusRulePolicyName: "test-policy",
 		DefaultNamespace:         "default-ns",
 		GetDefaultConfigFunc:     mockGetDefaultConfigFunc,
-		ApplyChangesFunc:         mockApplyChangesFunc,
+		ApplyChangesFunc: func(ctx context.Context, c client.Client, configData RSNamespaceConfigMapData) error {
+			applyCalled++
+			return nil
+		},
 	}
 
 	state := &ComponentState{
@@ -188,6 +228,7 @@ func TestHandleComponentRightSizing_FeatureEnabled(t *testing.T) {
 	}, cm)
 	require.NoError(t, err)
 	assert.Contains(t, cm.Data, "prometheusRuleConfig")
+	assert.Equal(t, 1, applyCalled, "ApplyChangesFunc should be called once when enabling the component")
 }
 
 func TestCleanupComponentResources_WithConfigMap(t *testing.T) {

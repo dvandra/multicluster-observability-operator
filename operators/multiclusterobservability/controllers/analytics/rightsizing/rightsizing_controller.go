@@ -9,8 +9,10 @@ import (
 	"fmt"
 
 	mcov1beta2 "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/api/v1beta2"
+	rsgpu "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-gpu"
 	rsnamespace "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-namespace"
 	rsvirtualization "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-virtualization"
+	rsworkload "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-workload"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -35,6 +37,16 @@ func CreateRightSizingComponent(
 		return fmt.Errorf("failed to handle virtualization right-sizing: %w", err)
 	}
 
+	// Handle workload+pod right-sizing (separate policy)
+	if err := rsworkload.HandleRightSizing(ctx, c, mco); err != nil {
+		return fmt.Errorf("failed to handle workload right-sizing: %w", err)
+	}
+
+	// Handle GPU right-sizing (separate policy)
+	if err := rsgpu.HandleRightSizing(ctx, c, mco); err != nil {
+		return fmt.Errorf("failed to handle gpu right-sizing: %w", err)
+	}
+
 	log.Info("rs - create component task completed")
 	return nil
 }
@@ -47,4 +59,12 @@ func GetNamespaceRSConfigMapPredicateFunc(ctx context.Context, c client.Client) 
 // GetVirtualizationRSConfigMapPredicateFunc returns predicate for virtualization right-sizing ConfigMap
 func GetVirtualizationRSConfigMapPredicateFunc(ctx context.Context, c client.Client) predicate.Funcs {
 	return rsvirtualization.GetVirtualizationRSConfigMapPredicateFunc(ctx, c)
+}
+
+func GetWorkloadRSConfigMapPredicateFunc(ctx context.Context, c client.Client) predicate.Funcs {
+	return rsworkload.GetWorkloadRSConfigMapPredicateFunc(ctx, c)
+}
+
+func GetGPURSConfigMapPredicateFunc(ctx context.Context, c client.Client) predicate.Funcs {
+	return rsgpu.GetGPURSConfigMapPredicateFunc(ctx, c)
 }
