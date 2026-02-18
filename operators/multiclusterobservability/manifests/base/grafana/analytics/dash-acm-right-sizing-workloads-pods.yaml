@@ -21,57 +21,46 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "id": 0,
       "links": [],
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "000000001"
-          },
           "description": "",
           "fieldConfig": {
             "defaults": {},
             "overrides": []
           },
           "gridPos": {
-            "h": 2,
+            "h": 4,
             "w": 24,
             "x": 0,
             "y": 0
           },
           "id": 100,
           "options": {
-            "content": "### How to use this dashboard\\n\\n- **Set `Cluster`, `Profile`, and `Aggregation` first** (they scope all queries).\\n- Then pick a **`Namespace`** to see its workloads.\\n- Use **`Workload Type`** to filter (`Deployment`, `StatefulSet`, `DaemonSet`).\\n- Select a **`Workload`** to populate the pod tables below.\\n\\n### What you are looking at\\n\\n- **Usage**: actual CPU/memory consumption (max over the selected time range).\\n- **Request**: sum of container requests (max over the selected time range).\\n- **Recommendation**: buffered max usage (matches the right-sizing rules).\\n\\nTip: if a workload/pod has no data, double-check the namespace filters (inclusion/exclusion + `label_env`) and that the workload has running pods in the selected time range.",
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "######## How to use this dashboard\\n\\n- **Set `Cluster`, `Profile`, and `Aggregation` first** (they scope all queries).\\n- Then pick a **`Namespace`** to see its workloads.\\n- Use **`Workload Type`** to filter (`Deployment`, `StatefulSet`, `DaemonSet`, `ReplicaSet`, `Job`, `CronJob`).\\n- Select a **`Workload`** to populate the pod tables below.\\n\\n### What you are looking at\\n\\n- **Usage**: actual CPU/memory consumption (max over the selected time range).\\n- **Request**: sum of container requests (max over the selected time range).\\n- **Recommendation**: buffered max usage (matches the right-sizing rules).\\n\\nTip: if a workload/pod has no data, double-check the namespace filters (inclusion/exclusion + `label_env`) and that the workload has running pods in the selected time range.",
             "mode": "markdown"
           },
-          "pluginVersion": "11.1.5",
-          "title": "Navigation hint",
+          "pluginVersion": "12.2.0",
+          "title": "Navigation Hint",
           "transparent": true,
           "type": "text"
         },
         {
           "collapsed": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "000000001"
-          },
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 2
+            "y": 4
           },
           "id": 1,
           "panels": [],
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "000000001"
-              },
-              "refId": "A"
-            }
-          ],
           "title": "Workloads",
           "type": "row"
         },
@@ -82,34 +71,308 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "none"
             },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 9,
-            "w": 24,
-            "x": 0,
-            "y": 3
-          },
-          "id": 2,
-          "options": {
-            "showHeader": true,
-            "sortBy": [
+            "overrides": [
               {
-                "desc": true,
-                "displayName": "Value #A"
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Utilization %"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Usage"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 4
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Request"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 7
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #D"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Recommendation"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 4
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Request"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 188
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 395
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Usage"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 148
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Utilization %"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 175
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 291
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload Type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 140
+                  }
+                ]
               }
             ]
           },
-          "pluginVersion": "11.1.5",
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 2,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "CPU Request"
+              }
+            ]
+          },
+          "pluginVersion": "12.2.0",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:]) / max_over_time(acm_rs:workload:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)\n/\nmax_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -119,7 +382,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -129,7 +393,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "C"
@@ -139,10 +404,27 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:cpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:cpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
+              "legendFormat": "__auto",
               "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "max_over_time(\n  (\n    count by (workload, workload_type, namespace) (\n      acm_rs:workload:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
+              "format": "table",
+              "hide": false,
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "E"
             }
           ],
           "title": "Workloads CPU (Utilization / Usage / Request / Recommendation)",
@@ -153,11 +435,12 @@ data:
                 "include": {
                   "names": [
                     "workload",
-                    "workload_type",
                     "Value #A",
                     "Value #B",
                     "Value #C",
-                    "Value #D"
+                    "Value #D",
+                    "namespace",
+                    "workload_type"
                   ]
                 }
               }
@@ -178,6 +461,28 @@ data:
                   }
                 ]
               }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {},
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 3,
+                  "Value #B": 4,
+                  "Value #C": 5,
+                  "Value #D": 6,
+                  "namespace": 2,
+                  "workload": 0,
+                  "workload_type": 1
+                },
+                "renameByName": {
+                  "Value #A": "",
+                  "namespace": "Namespace",
+                  "workload": "Workload",
+                  "workload_type": "Workload Type"
+                }
+              }
             }
           ],
           "type": "table"
@@ -189,18 +494,291 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Utilization %"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Usage"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Request"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #D"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Recommendation"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 289
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload Type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 137
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 193
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Utilization %"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 180
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Usage"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 148
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Request"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 166
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 12
+            "y": 13
           },
           "id": 3,
           "options": {
+            "cellHeight": "sm",
             "showHeader": true,
             "sortBy": [
               {
@@ -209,14 +787,15 @@ data:
               }
             ]
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "12.2.0",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:]) / max_over_time(acm_rs:workload:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)\n/\nmax_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -226,7 +805,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -236,7 +816,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "C"
@@ -246,10 +827,26 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:workload:memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (workload) (\n      acm_rs:workload:memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "max_over_time(\n  (\n    count by (workload, workload_type, namespace) (\n      acm_rs:workload:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
+              "format": "table",
+              "hide": false,
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "E"
             }
           ],
           "title": "Workloads Memory (Utilization / Usage / Request / Recommendation)",
@@ -260,11 +857,12 @@ data:
                 "include": {
                   "names": [
                     "workload",
-                    "workload_type",
                     "Value #A",
                     "Value #B",
                     "Value #C",
-                    "Value #D"
+                    "Value #D",
+                    "workload_type",
+                    "namespace"
                   ]
                 }
               }
@@ -285,33 +883,41 @@ data:
                   }
                 ]
               }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {},
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 3,
+                  "Value #B": 4,
+                  "Value #C": 5,
+                  "Value #D": 6,
+                  "namespace": 2,
+                  "workload": 0,
+                  "workload_type": 1
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "workload": "Workload",
+                  "workload_type": "Workload Type"
+                }
+              }
             }
           ],
           "type": "table"
         },
         {
           "collapsed": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "000000001"
-          },
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 21
+            "y": 22
           },
           "id": 4,
           "panels": [],
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "000000001"
-              },
-              "refId": "A"
-            }
-          ],
           "title": "Pods (select a workload)",
           "type": "row"
         },
@@ -322,18 +928,314 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "none"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "pod"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 389
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Utilization %"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Usage"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 4
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Request"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 4
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #D"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "CPU Recommendation"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 4
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Pod"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 370
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload Type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 117
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Request"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 109
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Usage"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 95
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CPU Utilization %"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 138
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 151
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 174
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 22
+            "y": 23
           },
-          "id": 5,
+          "id": 6,
           "options": {
+            "cellHeight": "sm",
             "showHeader": true,
             "sortBy": [
               {
@@ -342,14 +1244,15 @@ data:
               }
             ]
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "12.2.0",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:]) / max_over_time(acm_rs:pod:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)\n/\nmax_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -359,7 +1262,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -369,7 +1273,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:cpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "C"
@@ -379,10 +1284,27 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:cpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:cpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
+              "legendFormat": "__auto",
               "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "max_over_time(\n  (\n    count by (pod, workload, workload_type, namespace) (\n      acm_rs:pod:cpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
+              "format": "table",
+              "hide": false,
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "E"
             }
           ],
           "title": "Pods CPU for Workload $workload (Utilization / Usage / Request / Recommendation)",
@@ -396,7 +1318,10 @@ data:
                     "Value #A",
                     "Value #B",
                     "Value #C",
-                    "Value #D"
+                    "Value #D",
+                    "namespace",
+                    "workload",
+                    "workload_type"
                   ]
                 }
               }
@@ -417,6 +1342,29 @@ data:
                   }
                 ]
               }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {},
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 4,
+                  "Value #B": 5,
+                  "Value #C": 6,
+                  "Value #D": 7,
+                  "namespace": 3,
+                  "pod": 0,
+                  "workload": 1,
+                  "workload_type": 2
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "workload": "Workload",
+                  "workload_type": "Workload Type"
+                }
+              }
             }
           ],
           "type": "table"
@@ -428,18 +1376,314 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "pod"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 398
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Utilization %"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Usage"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Request"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #D"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Memory Recommendation"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 1e-8,
+                          "result": {
+                            "index": 0,
+                            "text": "0.01"
+                          },
+                          "to": 0.00999999
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "match": "null",
+                          "result": {
+                            "index": 1,
+                            "text": "N/A"
+                          }
+                        },
+                        "type": "special"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Pod"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 297
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 157
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload Type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 116
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 143
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Usage"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 125
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Request"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 137
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Memory Utilization %"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 163
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 31
+            "y": 32
           },
-          "id": 6,
+          "id": 5,
           "options": {
+            "cellHeight": "sm",
             "showHeader": true,
             "sortBy": [
               {
@@ -448,14 +1692,15 @@ data:
               }
             ]
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "12.2.0",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:]) / max_over_time(acm_rs:pod:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)\n/\nmax_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -465,7 +1710,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -475,7 +1721,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:memory_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "C"
@@ -485,10 +1732,26 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max_over_time(acm_rs:pod:memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}[$days:])",
+              "editorMode": "code",
+              "expr": "max_over_time(\n  (\n    sum by (pod) (\n      acm_rs:pod:memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
               "format": "table",
               "instant": true,
               "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "max_over_time(\n  (\n    count by (pod, workload, workload_type, namespace) (\n      acm_rs:pod:memory_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}\n    )\n  )[$days:]\n)",
+              "format": "table",
+              "hide": false,
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "E"
             }
           ],
           "title": "Pods Memory for Workload $workload (Utilization / Usage / Request / Recommendation)",
@@ -502,7 +1765,10 @@ data:
                     "Value #A",
                     "Value #B",
                     "Value #C",
-                    "Value #D"
+                    "Value #D",
+                    "namespace",
+                    "workload",
+                    "workload_type"
                   ]
                 }
               }
@@ -523,13 +1789,37 @@ data:
                   }
                 ]
               }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {},
+                "includeByName": {},
+                "indexByName": {
+                  "Value #A": 4,
+                  "Value #B": 5,
+                  "Value #C": 6,
+                  "Value #D": 7,
+                  "namespace": 3,
+                  "pod": 0,
+                  "workload": 1,
+                  "workload_type": 2
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "workload": "Workload",
+                  "workload_type": "Workload Type"
+                }
+              }
             }
           ],
           "type": "table"
         }
       ],
+      "preload": false,
       "refresh": "1m",
-      "schemaVersion": 39,
+      "schemaVersion": 42,
       "tags": [
         "ACM",
         "Right-Sizing"
@@ -538,13 +1828,11 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
               "text": "Observatorium",
               "value": "000000001"
             },
             "hide": 2,
             "includeAll": false,
-            "multi": false,
             "name": "datasource",
             "options": [],
             "query": "prometheus",
@@ -553,7 +1841,6 @@ data:
           },
           {
             "current": {
-              "selected": false,
               "text": "local-cluster",
               "value": "local-cluster"
             },
@@ -562,10 +1849,8 @@ data:
               "uid": "${datasource}"
             },
             "definition": "label_values({__name__=~\"acm_rs:workload:(cpu_request|cpu_usage|memory_request|memory_usage)\"},cluster)",
-            "hide": 0,
             "includeAll": false,
             "label": "Cluster",
-            "multi": false,
             "name": "cluster",
             "options": [],
             "query": {
@@ -578,7 +1863,6 @@ data:
           },
           {
             "current": {
-              "selected": false,
               "text": "Max OverAll",
               "value": "Max OverAll"
             },
@@ -587,10 +1871,8 @@ data:
               "uid": "${datasource}"
             },
             "definition": "label_values({__name__=~\"acm_rs:workload:(cpu_request|cpu_usage|memory_request|memory_usage)\",cluster=\"$cluster\"},profile)",
-            "hide": 0,
             "includeAll": false,
             "label": "Profile",
-            "multi": false,
             "name": "profile",
             "options": [],
             "query": {
@@ -603,14 +1885,11 @@ data:
           },
           {
             "current": {
-              "selected": false,
-              "text": "5d",
-              "value": "5d"
+              "text": "10d",
+              "value": "10d"
             },
-            "hide": 0,
             "includeAll": false,
             "label": "Aggregation",
-            "multi": false,
             "name": "days",
             "options": [
               {
@@ -624,12 +1903,12 @@ data:
                 "value": "2d"
               },
               {
-                "selected": true,
+                "selected": false,
                 "text": "5d",
                 "value": "5d"
               },
               {
-                "selected": false,
+                "selected": true,
                 "text": "10d",
                 "value": "10d"
               },
@@ -654,19 +1933,16 @@ data:
           },
           {
             "current": {
-              "selected": false,
-              "text": "default",
-              "value": "default"
+              "text": "open-cluster-management",
+              "value": "open-cluster-management"
             },
             "datasource": {
               "type": "prometheus",
               "uid": "${datasource}"
             },
             "definition": "label_values(acm_rs:workload:cpu_usage{cluster=\"$cluster\",profile=\"$profile\"},namespace)",
-            "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Namespace",
-            "multi": false,
             "name": "namespace",
             "options": [],
             "query": {
@@ -679,40 +1955,63 @@ data:
           },
           {
             "current": {
-              "selected": true,
-              "text": "All",
-              "value": ".*"
+              "text": [
+                "$__all"
+              ],
+              "value": [
+                "$__all"
+              ]
             },
-            "hide": 0,
             "includeAll": true,
             "label": "Workload Type",
-            "multi": false,
             "name": "workload_type",
             "options": [
               {
-                "selected": true,
-                "text": "All",
-                "value": ".*"
+                "selected": false,
+                "text": "Deployment",
+                "value": "Deployment"
+              },
+              {
+                "selected": false,
+                "text": "StatefulSet",
+                "value": "StatefulSet"
+              },
+              {
+                "selected": false,
+                "text": "DaemonSet",
+                "value": "DaemonSet"
+              },
+              {
+                "selected": false,
+                "text": "ReplicaSet",
+                "value": "ReplicaSet"
+              },
+              {
+                "selected": false,
+                "text": "Job",
+                "value": "Job"
+              },
+              {
+                "selected": false,
+                "text": "CronJob",
+                "value": "CronJob"
               }
             ],
-            "query": "Deployment,StatefulSet,DaemonSet",
+            "query": "Deployment,StatefulSet,DaemonSet,ReplicaSet,Job,CronJob",
             "type": "custom"
           },
           {
             "current": {
-              "selected": false,
-              "text": "",
-              "value": ""
+              "text": "multicluster-observability-operator",
+              "value": "multicluster-observability-operator"
             },
             "datasource": {
               "type": "prometheus",
               "uid": "${datasource}"
             },
             "definition": "label_values(acm_rs:workload:cpu_usage{cluster=\"$cluster\",namespace=\"$namespace\",workload_type=~\"$workload_type\",profile=\"$profile\"},workload)",
-            "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Workload",
-            "multi": false,
             "name": "workload",
             "options": [],
             "query": {
@@ -729,11 +2028,11 @@ data:
         "from": "now-7d",
         "to": "now"
       },
+      "timepicker": {},
       "timezone": "",
       "title": "ACM Right-Sizing Workloads & Pods",
       "uid": "acmRSWorkPod",
-      "version": 1,
-      "weekStart": ""
+      "version": 50
     }
 kind: ConfigMap
 metadata:

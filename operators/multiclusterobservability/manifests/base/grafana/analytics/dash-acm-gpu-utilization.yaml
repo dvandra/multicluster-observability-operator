@@ -25,7 +25,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 2,
@@ -45,7 +45,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -265,7 +265,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -469,7 +469,7 @@ data:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -783,9 +783,39 @@ data:
                 "selected": true,
                 "text": "All",
                 "value": ".*"
+              },
+              {
+                "selected": false,
+                "text": "Deployment",
+                "value": "Deployment"
+              },
+              {
+                "selected": false,
+                "text": "StatefulSet",
+                "value": "StatefulSet"
+              },
+              {
+                "selected": false,
+                "text": "DaemonSet",
+                "value": "DaemonSet"
+              },
+              {
+                "selected": false,
+                "text": "ReplicaSet",
+                "value": "ReplicaSet"
+              },
+              {
+                "selected": false,
+                "text": "Job",
+                "value": "Job"
+              },
+              {
+                "selected": false,
+                "text": "CronJob",
+                "value": "CronJob"
               }
             ],
-            "query": "Deployment,StatefulSet,DaemonSet",
+            "query": "Deployment,StatefulSet,DaemonSet,ReplicaSet,Job,CronJob",
             "type": "custom"
           },
           {

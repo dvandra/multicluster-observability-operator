@@ -213,8 +213,70 @@ func buildGPUWorkloadPodRules5m(
 			      "workload_type", "Deployment", "workload", ".*"
 			    )
 			  )
+			  or
+			  (
+			    label_replace(
+			      label_replace(
+			        (
+			          label_replace(
+			            kube_pod_owner{%s, owner_kind="ReplicaSet"},
+			            "replicaset", "$1", "owner_name", "(.*)"
+			          )
+			          unless on (namespace, replicaset)
+			            kube_replicaset_owner{%s, owner_kind="Deployment"}
+			        ),
+			        "workload", "$1", "replicaset", "(.*)"
+			      ),
+			      "workload_type", "ReplicaSet", "workload", ".*"
+			    )
+			  )
+			  or
+			  (
+			    label_replace(
+			      label_replace(
+			        (
+			          label_replace(
+			            kube_pod_owner{%s, owner_kind="Job"},
+			            "job_name", "$1", "owner_name", "(.*)"
+			          )
+			          * on (namespace, job_name) group_left(cronjob)
+			            label_replace(
+			              (
+			                label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job_name", "(.*)")
+			                or
+			                label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job", "(.*)")
+			              ),
+			              "cronjob", "$1", "owner_name", "(.*)"
+			            )
+			        ),
+			        "workload", "$1", "cronjob", "(.*)"
+			      ),
+			      "workload_type", "CronJob", "workload", ".*"
+			    )
+			  )
+			  or
+			  (
+			    label_replace(
+			      label_replace(
+			        (
+			          label_replace(
+			            kube_pod_owner{%s, owner_kind="Job"},
+			            "job_name", "$1", "owner_name", "(.*)"
+			          )
+			          unless on (namespace, job_name)
+			            (
+			              label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job_name", "(.*)")
+			              or
+			              label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job", "(.*)")
+			            )
+			        ),
+			        "workload", "$1", "owner_name", "(.*)"
+			      ),
+			      "workload_type", "Job", "workload", ".*"
+			    )
+			  )
 			)`,
-			nsFilter, nsFilter, nsFilter,
+			nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter,
 		)
 		rules = append(rules, rule("acm_rs:pod_workload:relabel:5m", podWorkloadRelabelExpr))
 	}
@@ -530,4 +592,3 @@ func buildGPUClusterRules1d(
 		ruleWithLabels("acm_rs:cluster:gpu_memory_total", `max_over_time(acm_rs:cluster:gpu_memory_total:5m[1d])`),
 	}
 }
-

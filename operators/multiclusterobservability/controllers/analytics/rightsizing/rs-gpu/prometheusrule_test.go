@@ -31,4 +31,3 @@ func TestGeneratePrometheusRule_IncludesNamespaceGPU(t *testing.T) {
 	// First rule group should include namespace GPU request expression.
 	assert.Contains(t, rule.Spec.Groups[0].Rules[0].Expr.String(), `resource=~"nvidia.com/gpu|amd.com/gpu"`)
 }
-

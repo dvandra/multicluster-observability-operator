@@ -30,6 +30,11 @@ func TestGeneratePrometheusRule_IncludesMappingRule(t *testing.T) {
 	assert.Len(t, rule.Spec.Groups, 2)
 	assert.Equal(t, "acm-right-sizing-workload-5m.rules", rule.Spec.Groups[0].Name)
 	assert.Equal(t, "acm_rs:pod_workload:relabel:5m", rule.Spec.Groups[0].Rules[0].Record)
-	assert.Contains(t, rule.Spec.Groups[0].Rules[0].Expr.String(), `namespace=~"ns-a"`)
+	expr := rule.Spec.Groups[0].Rules[0].Expr.String()
+	assert.Contains(t, expr, `namespace=~"ns-a"`)
+	// Ensure the workload mapping covers batch + standalone controller cases too.
+	assert.Contains(t, expr, `owner_kind="Job"`)
+	assert.Contains(t, expr, `kube_job_owner`)
+	assert.Contains(t, expr, `owner_kind="CronJob"`)
+	assert.Contains(t, expr, `"workload_type", "ReplicaSet"`)
 }
-
