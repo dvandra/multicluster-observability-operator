@@ -126,8 +126,7 @@ data:
               "format": "table",
               "instant": true,
               "refId": "D"
-            }
-            ,
+            },
             {
               "datasource": {
                 "type": "prometheus",
@@ -210,8 +209,7 @@ data:
                     "Value #A",
                     "Value #B",
                     "Value #C",
-                    "Value #D"
-                    ,
+                    "Value #D",
                     "Value #J",
                     "Value #K",
                     "Value #E",
@@ -306,7 +304,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"} / acm_rs:workload:gpu_request{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_usage{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"} / acm_rs:workload:gpu_request{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -316,7 +314,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_usage{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -326,18 +324,17 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_request{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_request{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "C"
-            }
-            ,
+            },
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_memory_used{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_memory_used{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "D"
@@ -347,7 +344,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_recommendation{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "J"
@@ -357,7 +354,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_memory_recommendation{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "K"
@@ -367,7 +364,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_memory_total{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_memory_total{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "E"
@@ -377,7 +374,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_power_usage_watts{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_power_usage_watts{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "F"
@@ -387,7 +384,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_temperature_celsius{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_temperature_celsius{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "G"
@@ -397,7 +394,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_sm_clock_hertz{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_sm_clock_hertz{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "H"
@@ -407,7 +404,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:workload:gpu_memory_clock_hertz{cluster=\"$cluster\", namespace=\"$namespace\", profile=\"$profile\"}",
+              "expr": "acm_rs:workload:gpu_memory_clock_hertz{cluster=\"$cluster\", namespace=~\"$namespace\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "I"
@@ -424,8 +421,7 @@ data:
                     "workload_type",
                     "Value #A",
                     "Value #B",
-                    "Value #C"
-                    ,
+                    "Value #C",
                     "Value #D",
                     "Value #J",
                     "Value #K",
@@ -510,7 +506,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"} / acm_rs:pod:gpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_usage{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"} / acm_rs:pod:gpu_request{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "A"
@@ -520,7 +516,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_usage{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_usage{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "B"
@@ -530,18 +526,17 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_request{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_request{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "C"
-            }
-            ,
+            },
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_memory_used{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_memory_used{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "D"
@@ -551,7 +546,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_recommendation{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "J"
@@ -561,7 +556,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_memory_recommendation{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_memory_recommendation{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "K"
@@ -571,7 +566,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_memory_total{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_memory_total{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "E"
@@ -581,7 +576,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_power_usage_watts{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_power_usage_watts{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "F"
@@ -591,7 +586,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_temperature_celsius{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_temperature_celsius{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "G"
@@ -601,7 +596,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_sm_clock_hertz{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_sm_clock_hertz{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "H"
@@ -611,7 +606,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "acm_rs:pod:gpu_memory_clock_hertz{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$workload_type\", workload=\"$workload\", profile=\"$profile\"}",
+              "expr": "acm_rs:pod:gpu_memory_clock_hertz{cluster=\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$workload_type\", workload=~\"$workload\", profile=\"$profile\"}",
               "format": "table",
               "instant": true,
               "refId": "I"
@@ -627,8 +622,7 @@ data:
                     "pod",
                     "Value #A",
                     "Value #B",
-                    "Value #C"
-                    ,
+                    "Value #C",
                     "Value #D",
                     "Value #J",
                     "Value #K",
@@ -754,9 +748,9 @@ data:
             },
             "definition": "label_values(acm_rs:workload:gpu_request{cluster=\"$cluster\",profile=\"$profile\"},namespace)",
             "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Namespace",
-            "multi": false,
+            "multi": true,
             "name": "namespace",
             "options": [],
             "query": {
@@ -765,7 +759,8 @@ data:
             },
             "refresh": 2,
             "sort": 1,
-            "type": "query"
+            "type": "query",
+            "allValue": ".*"
           },
           {
             "current": {
@@ -828,20 +823,21 @@ data:
               "type": "prometheus",
               "uid": "${datasource}"
             },
-            "definition": "label_values(acm_rs:pod:gpu_request{cluster=\"$cluster\",namespace=\"$namespace\",workload_type=~\"$workload_type\",profile=\"$profile\"},workload)",
+            "definition": "label_values(acm_rs:pod:gpu_request{cluster=\"$cluster\",namespace=~\"$namespace\",workload_type=~\"$workload_type\",profile=\"$profile\"},workload)",
             "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Workload",
-            "multi": false,
+            "multi": true,
             "name": "workload",
             "options": [],
             "query": {
-              "query": "label_values(acm_rs:pod:gpu_request{cluster=\"$cluster\",namespace=\"$namespace\",workload_type=~\"$workload_type\",profile=\"$profile\"},workload)",
+              "query": "label_values(acm_rs:pod:gpu_request{cluster=\"$cluster\",namespace=~\"$namespace\",workload_type=~\"$workload_type\",profile=\"$profile\"},workload)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 2,
             "sort": 1,
-            "type": "query"
+            "type": "query",
+            "allValue": ".*"
           }
         ]
       },

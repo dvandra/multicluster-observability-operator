@@ -74,6 +74,7 @@ func GeneratePrometheusRuleWithFeatures(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      PrometheusRuleName,
 			Namespace: rsutility.MonitoringNamespace,
+			Labels:    rsutility.PrometheusK8sRuleLabels,
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PrometheusRule",
@@ -92,8 +93,8 @@ func buildWorkloadRules5m(
 	podsEnabled bool,
 ) []monitoringv1.Rule {
 	podWorkloadRelabelExpr := fmt.Sprintf(
-		`max by (namespace, pod, workload, workload_type) (
-		  (
+		`(
+		  max by (namespace, pod, workload, workload_type) (
 		    label_replace(
 		      label_replace(
 		        kube_pod_owner{%s, owner_kind=~"StatefulSet|DaemonSet"},
@@ -102,8 +103,10 @@ func buildWorkloadRules5m(
 		      "workload_type", "$1", "owner_kind", "(.*)"
 		    )
 		  )
-		  or
-		  (
+		)
+		or
+		(
+		  max by (namespace, pod, workload, workload_type) (
 		    label_replace(
 		      label_replace(
 		        (
@@ -111,19 +114,23 @@ func buildWorkloadRules5m(
 		            kube_pod_owner{%s, owner_kind="ReplicaSet"},
 		            "replicaset", "$1", "owner_name", "(.*)"
 		          )
-		          * on (namespace, replicaset) group_left(deployment)
-		            label_replace(
-		              kube_replicaset_owner{%s, owner_kind="Deployment"},
-		              "deployment", "$1", "owner_name", "(.*)"
+		          * on (namespace, replicaset) group_left(owner_name)
+		            topk by (namespace, replicaset) (
+		              1,
+		              max by (namespace, replicaset, owner_name) (
+		                kube_replicaset_owner{%s, owner_kind="Deployment"}
+		              )
 		            )
 		        ),
-		        "workload", "$1", "deployment", "(.*)"
+		        "workload", "$1", "owner_name", "(.*)"
 		      ),
 		      "workload_type", "Deployment", "workload", ".*"
 		    )
 		  )
-		  or
-		  (
+		)
+		or
+		(
+		  max by (namespace, pod, workload, workload_type) (
 		    label_replace(
 		      label_replace(
 		        (
@@ -139,8 +146,10 @@ func buildWorkloadRules5m(
 		      "workload_type", "ReplicaSet", "workload", ".*"
 		    )
 		  )
-		  or
-		  (
+		)
+		or
+		(
+		  max by (namespace, pod, workload, workload_type) (
 		    label_replace(
 		      label_replace(
 		        (
@@ -148,35 +157,30 @@ func buildWorkloadRules5m(
 		            kube_pod_owner{%s, owner_kind="Job"},
 		            "job_name", "$1", "owner_name", "(.*)"
 		          )
-		          * on (namespace, job_name) group_left(cronjob)
-		            label_replace(
-		              (
-		                label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job_name", "(.*)")
-		                or
-		                label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job", "(.*)")
-		              ),
-		              "cronjob", "$1", "owner_name", "(.*)"
+		          * on (namespace, job_name) group_left(owner_name)
+		            max by (namespace, job_name, owner_name) (
+		              kube_job_owner{%s, owner_kind="CronJob"}
 		            )
 		        ),
-		        "workload", "$1", "cronjob", "(.*)"
+		        "workload", "$1", "owner_name", "(.*)"
 		      ),
 		      "workload_type", "CronJob", "workload", ".*"
 		    )
 		  )
-		  or
-		  (
+		)
+		or
+		(
+		  max by (namespace, pod, workload, workload_type) (
 		    label_replace(
 		      label_replace(
 		        (
-		          label_replace(
-		            kube_pod_owner{%s, owner_kind="Job"},
-		            "job_name", "$1", "owner_name", "(.*)"
-		          )
-		          unless on (namespace, job_name)
-		            (
-		              label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job_name", "(.*)")
-		              or
-		              label_replace(kube_job_owner{%s, owner_kind="CronJob"}, "job_name", "$1", "job", "(.*)")
+		          kube_pod_owner{%s, owner_kind="Job"}
+		          unless on (namespace, owner_name)
+		            max by (namespace, owner_name) (
+		              label_replace(
+		                kube_job_owner{%s, owner_kind="CronJob"},
+		                "owner_name", "$1", "job_name", "(.*)"
+		              )
 		            )
 		        ),
 		        "workload", "$1", "owner_name", "(.*)"
@@ -185,7 +189,7 @@ func buildWorkloadRules5m(
 		    )
 		  )
 		)`,
-		nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter,
+		nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter, nsFilter,
 	)
 
 	rules := []monitoringv1.Rule{

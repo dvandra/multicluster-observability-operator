@@ -39,17 +39,32 @@ func ApplyRSGPUConfigMapChanges(ctx context.Context, c client.Client, configData
 	// Prevent duplicate definition of the shared mapping rule (acm_rs:pod_workload:relabel:5m)
 	// when rs-workload is enabled alongside rs-gpu.
 	workloadOrPodEnabled := false
+	enabled := false
 	mcoList := &mcov1beta2.MultiClusterObservabilityList{}
 	if err := c.List(ctx, mcoList); err == nil && len(mcoList.Items) > 0 {
 		mco := mcoList.Items[0]
 		if mco.Spec.Capabilities != nil && mco.Spec.Capabilities.Platform != nil {
 			workloadOrPodEnabled = mco.Spec.Capabilities.Platform.Analytics.WorkloadPodRightSizingRecommendation.Enabled
+			enabled = mco.Spec.Capabilities.Platform.Analytics.GPURightSizingRecommendation.Enabled
 		}
 	}
 
 	prometheusRule, err := GeneratePrometheusRuleWithMapping(configData, !workloadOrPodEnabled)
 	if err != nil {
 		return err
+	}
+
+	// Apply directly on the hub cluster as well. This makes local-cluster GPU right-sizing work even when
+	// policy propagation to local-cluster is disabled.
+	if enabled {
+		if err := rsutility.ApplyPrometheusRule(ctx, c, prometheusRule); err != nil {
+			return err
+		}
+	} else {
+		// Best-effort cleanup of the hub-local rule when disabled.
+		if err := rsutility.DeletePrometheusRule(ctx, c, PrometheusRuleName, rsutility.MonitoringNamespace); err != nil {
+			return err
+		}
 	}
 
 	if err := CreateOrUpdateGPUPrometheusRulePolicy(ctx, c, prometheusRule); err != nil {

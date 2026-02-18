@@ -52,6 +52,19 @@ func ApplyRSWorkloadConfigMapChanges(ctx context.Context, c client.Client, confi
 		return err
 	}
 
+	// Apply directly on the hub cluster as well. This makes local-cluster right-sizing work even when
+	// policy propagation to local-cluster is disabled.
+	if enabled {
+		if err := rsutility.ApplyPrometheusRule(ctx, c, prometheusRule); err != nil {
+			return err
+		}
+	} else {
+		// Best-effort cleanup of the hub-local rule when disabled.
+		if err := rsutility.DeletePrometheusRule(ctx, c, PrometheusRuleName, rsutility.MonitoringNamespace); err != nil {
+			return err
+		}
+	}
+
 	if err := CreateOrUpdateWorkloadPrometheusRulePolicy(ctx, c, prometheusRule); err != nil {
 		return err
 	}

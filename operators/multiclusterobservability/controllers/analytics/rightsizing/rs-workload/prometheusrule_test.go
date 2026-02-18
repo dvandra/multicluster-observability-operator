@@ -27,6 +27,8 @@ func TestGeneratePrometheusRule_IncludesMappingRule(t *testing.T) {
 	rule, err := GeneratePrometheusRuleWithFeatures(config, true, true)
 	assert.NoError(t, err)
 	assert.Equal(t, PrometheusRuleName, rule.Name)
+	assert.Equal(t, "k8s", rule.Labels["prometheus"])
+	assert.Equal(t, "alert-rules", rule.Labels["role"])
 	assert.Len(t, rule.Spec.Groups, 2)
 	assert.Equal(t, "acm-right-sizing-workload-5m.rules", rule.Spec.Groups[0].Name)
 	assert.Equal(t, "acm_rs:pod_workload:relabel:5m", rule.Spec.Groups[0].Rules[0].Record)

@@ -33,6 +33,8 @@ func TestGeneratePrometheusRule_InclusionOnly(t *testing.T) {
 	// Verify the rule name and namespace
 	assert.Equal(t, PrometheusRuleName, rule.Name)
 	assert.Equal(t, rsutility.MonitoringNamespace, rule.Namespace)
+	assert.Equal(t, "k8s", rule.Labels["prometheus"])
+	assert.Equal(t, "alert-rules", rule.Labels["role"])
 
 	// Verify we have 4 rule groups
 	assert.Len(t, rule.Spec.Groups, 4)
