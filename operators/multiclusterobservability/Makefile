@@ -5,6 +5,9 @@
 
 include ../../.bingo/Variables.mk
 
+KUSTOMIZE := /usr/local/bin/kustomize
+
+
 # MAKEFILE_DIR is the directory that contains the current makefile
 # used to locate some common building files
 MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -112,14 +115,20 @@ help: ## Display this help.
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
 manifests: $(CONTROLLER_GEN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	echo 21
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	# TODO(morvencao): replace the sed command with kubebuilder marker
 	$(SED) -i 's/storage: false/&\n    deprecated: true/g' config/crd/bases/observability.open-cluster-management.io_multiclusterobservabilities.yaml
 	$(SED) -i 's/storage: false/&\n    deprecationWarning: observability.open-cluster-management.io\/v1beta1 MultiClusterObservability is deprecated in v2.3+, unavailable in v2.6+; use observability.open-cluster-management.io\/v1beta2 MultiClusterObservability/g' config/crd/bases/observability.open-cluster-management.io_multiclusterobservabilities.yaml
+	echo 1234
+	yq eval 'del(.. | .description?)' -i /Users/dvandra/github/dvandra/multicluster-observability-operator/operators/multiclusterobservability/config/crd/bases/observability.open-cluster-management.io_multiclusterobservabilities.yaml
+	yq eval 'del(.. | .description?)' -i /Users/dvandra/github/dvandra/multicluster-observability-operator/operators/multiclusterobservability/config/crd/bases/core.observatorium.io_observatoria.yaml
+
 
 # Generate code
 .PHONY: generate
 generate: $(CONTROLLER_GEN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	echo 22
 	$(CONTROLLER_GEN) object:headerFile="$(ROOT_DIR)/hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
@@ -142,6 +151,7 @@ test: generate fmt vet manifests $(ENVTEST_BIN) ## Run tests.
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
+	echo 123
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
@@ -151,15 +161,15 @@ run: generate fmt vet manifests ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager using private RHEL base images.
-	docker build -t ${IMG} -f Dockerfile ../../
+	podman build -t ${IMG} -f Dockerfile ../../ --platform linux/amd64
 
 .PHONY: docker-build-local
 docker-build-local: test ## Build docker image with the manager using public UBI base images.
-	docker buildx build -t ${IMG} -f Dockerfile.dev --load  ../../
+	podman buildx build -t ${IMG} -f Dockerfile.dev --load  ../../
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+	podman push --log-level=debug ${IMG}
 
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
@@ -190,7 +200,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image quay.io/stolostron/multicluster-observability-operator=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 

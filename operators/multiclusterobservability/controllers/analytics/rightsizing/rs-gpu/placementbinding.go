@@ -14,4 +14,3 @@ import (
 func CreateGPUPlacementBinding(ctx context.Context, c client.Client) error {
 	return rsutility.CreateRSPlacementBinding(ctx, c, PlacementBindingName, ComponentState.Namespace, PlacementName, PrometheusRulePolicyName)
 }
-

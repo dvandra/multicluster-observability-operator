@@ -172,6 +172,13 @@ func buildGPUNamespaceRules5m(
 				nsFilter,
 			),
 		),
+		rule(
+			"acm_rs:namespace:gpu_type:5m",
+			fmt.Sprintf(
+				`max by (namespace, resource) (kube_pod_container_resource_requests{%s, resource=~"nvidia.com/gpu|amd.com/gpu", container!=""})`,
+				nsFilter,
+			),
+		),
 	}
 }
 
@@ -494,6 +501,7 @@ func buildGPUNamespaceRules1d(
 		ruleWithLabels("acm_rs:namespace:gpu_temperature_celsius", `max_over_time(acm_rs:namespace:gpu_temperature_celsius:5m[1d])`),
 		ruleWithLabels("acm_rs:namespace:gpu_sm_clock_hertz", `max_over_time(acm_rs:namespace:gpu_sm_clock_hertz:5m[1d])`),
 		ruleWithLabels("acm_rs:namespace:gpu_memory_clock_hertz", `max_over_time(acm_rs:namespace:gpu_memory_clock_hertz:5m[1d])`),
+		ruleWithLabels("acm_rs:namespace:gpu_type", `max_over_time(acm_rs:namespace:gpu_type:5m[1d])`),
 	}
 }
 
@@ -573,6 +581,34 @@ func buildGPUClusterRules5m(
 				nsFilter,
 			),
 		),
+		rule(
+			"acm_rs:cluster:gpu_power_usage_watts:5m",
+			fmt.Sprintf(
+				`max_over_time(sum by (cluster) (accelerator_power_usage_watts{%s})[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:cluster:gpu_temperature_celsius:5m",
+			fmt.Sprintf(
+				`max_over_time(max by (cluster) (accelerator_temperature_celcius{%s})[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:cluster:gpu_sm_clock_hertz:5m",
+			fmt.Sprintf(
+				`max_over_time(max by (cluster) (accelerator_sm_clock_hertz{%s})[5m:])`,
+				nsFilter,
+			),
+		),
+		rule(
+			"acm_rs:cluster:gpu_memory_clock_hertz:5m",
+			fmt.Sprintf(
+				`max_over_time(max by (cluster) (accelerator_memory_clock_hertz{%s})[5m:])`,
+				nsFilter,
+			),
+		),
 	}
 }
 
@@ -594,5 +630,9 @@ func buildGPUClusterRules1d(
 			fmt.Sprintf(`max_over_time(acm_rs:cluster:gpu_memory_used:5m[1d]) * (%d/100)`, rp),
 		),
 		ruleWithLabels("acm_rs:cluster:gpu_memory_total", `max_over_time(acm_rs:cluster:gpu_memory_total:5m[1d])`),
+		ruleWithLabels("acm_rs:cluster:gpu_power_usage_watts", `max_over_time(acm_rs:cluster:gpu_power_usage_watts:5m[1d])`),
+		ruleWithLabels("acm_rs:cluster:gpu_temperature_celsius", `max_over_time(acm_rs:cluster:gpu_temperature_celsius:5m[1d])`),
+		ruleWithLabels("acm_rs:cluster:gpu_sm_clock_hertz", `max_over_time(acm_rs:cluster:gpu_sm_clock_hertz:5m[1d])`),
+		ruleWithLabels("acm_rs:cluster:gpu_memory_clock_hertz", `max_over_time(acm_rs:cluster:gpu_memory_clock_hertz:5m[1d])`),
 	}
 }

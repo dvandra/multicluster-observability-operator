@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mco-rightsizing-mcp
+  namespace: mco-rightsizing-mcp-demo
+  labels:
+    app.kubernetes.io/name: mco-rightsizing-mcp-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mco-rightsizing-mcp-demo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mco-rightsizing-mcp-demo
+    spec:
+      serviceAccountName: mco-rightsizing-mcp
+      containers:
+        - name: mco-rightsizing-mcp
+          image: quay.io/REPLACE_ME/mco-rightsizing-mcp-demo:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: LISTEN_ADDR
+              value: ":8080"
+            - name: PROM_URL
+              value: "https://thanos-querier.openshift-monitoring.svc:9091"
+            - name: PROM_INSECURE_SKIP_VERIFY
+              value: "true"
+            - name: LOG_LEVEL
+              value: "info"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

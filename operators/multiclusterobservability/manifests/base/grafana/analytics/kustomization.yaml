@@ -1,6 +1,7 @@
 resources:
 - dash-acm-gpu-utilization.yaml
 - dash-acm-right-sizing-namespace.yaml
+- dash-acm-right-sizing-pods.yaml
 - dash-acm-right-sizing-workloads-pods.yaml
 - dash-acm-right-sizing-virtualization.yaml
 - dash-acm-right-sizing-virtualization-overestimation.yaml

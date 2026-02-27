@@ -40,3 +40,93 @@ func TestGeneratePrometheusRule_IncludesMappingRule(t *testing.T) {
 	assert.Contains(t, expr, `owner_kind="CronJob"`)
 	assert.Contains(t, expr, `"workload_type", "ReplicaSet"`)
 }
+
+func TestGeneratePrometheusRule_IncludesLimitRules(t *testing.T) {
+	config := rsutility.RSNamespaceConfigMapData{
+		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{
+			NamespaceFilterCriteria: struct {
+				InclusionCriteria []string "yaml:\"inclusionCriteria\""
+				ExclusionCriteria []string "yaml:\"exclusionCriteria\""
+			}{
+				ExclusionCriteria: []string{"openshift.*"},
+			},
+			RecommendationPercentage: 110,
+		},
+	}
+
+	rule, err := GeneratePrometheusRuleWithFeatures(config, true, true)
+	assert.NoError(t, err)
+
+	// Collect all record names from both 5m and 1d groups.
+	recordNames5m := make(map[string]string) // record → expr
+	for _, r := range rule.Spec.Groups[0].Rules {
+		recordNames5m[r.Record] = r.Expr.String()
+	}
+	recordNames1d := make(map[string]string)
+	for _, r := range rule.Spec.Groups[1].Rules {
+		recordNames1d[r.Record] = r.Expr.String()
+	}
+
+	// Verify all 5m limit rules exist and use kube_pod_container_resource_limits.
+	for _, name := range []string{
+		"acm_rs:pod:cpu_limit:5m",
+		"acm_rs:pod:memory_limit:5m",
+		"acm_rs:workload:cpu_limit:5m",
+		"acm_rs:workload:memory_limit:5m",
+	} {
+		expr, ok := recordNames5m[name]
+		assert.True(t, ok, "5m rule %q must be present", name)
+		assert.Contains(t, expr, "kube_pod_container_resource_limits", "5m rule %q must use limits metric", name)
+	}
+
+	// Verify all 1d limit rules exist and reference the corresponding 5m rule.
+	for _, name := range []string{
+		"acm_rs:pod:cpu_limit",
+		"acm_rs:pod:memory_limit",
+		"acm_rs:workload:cpu_limit",
+		"acm_rs:workload:memory_limit",
+	} {
+		expr, ok := recordNames1d[name]
+		assert.True(t, ok, "1d rule %q must be present", name)
+		assert.Contains(t, expr, name+":5m", "1d rule %q must reference its 5m counterpart", name)
+	}
+}
+
+func TestGeneratePrometheusRule_PodsOnlyIncludesLimitRules(t *testing.T) {
+	config := rsutility.RSNamespaceConfigMapData{
+		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{
+			NamespaceFilterCriteria: struct {
+				InclusionCriteria []string "yaml:\"inclusionCriteria\""
+				ExclusionCriteria []string "yaml:\"exclusionCriteria\""
+			}{
+				ExclusionCriteria: []string{"openshift.*"},
+			},
+			RecommendationPercentage: 110,
+		},
+	}
+
+	// Only pods enabled, workloads disabled.
+	rule, err := GeneratePrometheusRuleWithFeatures(config, false, true)
+	assert.NoError(t, err)
+
+	recordNames5m := make(map[string]bool)
+	for _, r := range rule.Spec.Groups[0].Rules {
+		recordNames5m[r.Record] = true
+	}
+	recordNames1d := make(map[string]bool)
+	for _, r := range rule.Spec.Groups[1].Rules {
+		recordNames1d[r.Record] = true
+	}
+
+	// Pod limits must be present.
+	assert.True(t, recordNames5m["acm_rs:pod:cpu_limit:5m"])
+	assert.True(t, recordNames5m["acm_rs:pod:memory_limit:5m"])
+	assert.True(t, recordNames1d["acm_rs:pod:cpu_limit"])
+	assert.True(t, recordNames1d["acm_rs:pod:memory_limit"])
+
+	// Workload limits must be absent.
+	assert.False(t, recordNames5m["acm_rs:workload:cpu_limit:5m"])
+	assert.False(t, recordNames5m["acm_rs:workload:memory_limit:5m"])
+	assert.False(t, recordNames1d["acm_rs:workload:cpu_limit"])
+	assert.False(t, recordNames1d["acm_rs:workload:memory_limit"])
+}

@@ -11,8 +11,8 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -53,4 +53,3 @@ func TestApplyPrometheusRule_CreateThenUpdate(t *testing.T) {
 func clientKey(ns, name string) client.ObjectKey {
 	return client.ObjectKey{Namespace: ns, Name: name}
 }
-

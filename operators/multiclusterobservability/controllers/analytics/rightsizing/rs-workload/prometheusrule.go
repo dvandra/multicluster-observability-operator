@@ -211,6 +211,17 @@ func buildWorkloadRules5m(
 				),
 			),
 			rule(
+				"acm_rs:pod:cpu_limit:5m",
+				fmt.Sprintf(
+					`max_over_time(sum by (namespace, pod, workload, workload_type) (
+					  kube_pod_container_resource_limits{%s, resource="cpu", container!=""}
+					  * on (namespace, pod) group_left(workload, workload_type)
+					    acm_rs:pod_workload:relabel:5m
+					)[5m:])`,
+					nsFilter,
+				),
+			),
+			rule(
 				"acm_rs:pod:cpu_usage:5m",
 				fmt.Sprintf(
 					`max_over_time(sum by (namespace, pod, workload, workload_type) (
@@ -226,6 +237,17 @@ func buildWorkloadRules5m(
 				fmt.Sprintf(
 					`max_over_time(sum by (namespace, pod, workload, workload_type) (
 					  kube_pod_container_resource_requests{%s, resource="memory", container!=""}
+					  * on (namespace, pod) group_left(workload, workload_type)
+					    acm_rs:pod_workload:relabel:5m
+					)[5m:])`,
+					nsFilter,
+				),
+			),
+			rule(
+				"acm_rs:pod:memory_limit:5m",
+				fmt.Sprintf(
+					`max_over_time(sum by (namespace, pod, workload, workload_type) (
+					  kube_pod_container_resource_limits{%s, resource="memory", container!=""}
 					  * on (namespace, pod) group_left(workload, workload_type)
 					    acm_rs:pod_workload:relabel:5m
 					)[5m:])`,
@@ -260,6 +282,17 @@ func buildWorkloadRules5m(
 				),
 			),
 			rule(
+				"acm_rs:workload:cpu_limit:5m",
+				fmt.Sprintf(
+					`max_over_time(sum by (namespace, workload, workload_type) (
+					  kube_pod_container_resource_limits{%s, resource="cpu", container!=""}
+					  * on (namespace, pod) group_left(workload, workload_type)
+					    acm_rs:pod_workload:relabel:5m
+					)[5m:])`,
+					nsFilter,
+				),
+			),
+			rule(
 				"acm_rs:workload:cpu_usage:5m",
 				fmt.Sprintf(
 					`max_over_time(sum by (namespace, workload, workload_type) (
@@ -275,6 +308,17 @@ func buildWorkloadRules5m(
 				fmt.Sprintf(
 					`max_over_time(sum by (namespace, workload, workload_type) (
 					  kube_pod_container_resource_requests{%s, resource="memory", container!=""}
+					  * on (namespace, pod) group_left(workload, workload_type)
+					    acm_rs:pod_workload:relabel:5m
+					)[5m:])`,
+					nsFilter,
+				),
+			),
+			rule(
+				"acm_rs:workload:memory_limit:5m",
+				fmt.Sprintf(
+					`max_over_time(sum by (namespace, workload, workload_type) (
+					  kube_pod_container_resource_limits{%s, resource="memory", container!=""}
 					  * on (namespace, pod) group_left(workload, workload_type)
 					    acm_rs:pod_workload:relabel:5m
 					)[5m:])`,
@@ -310,12 +354,14 @@ func buildWorkloadRules1d(
 	if podsEnabled {
 		rules = append(rules,
 			ruleWithLabels("acm_rs:pod:cpu_request", `max_over_time(acm_rs:pod:cpu_request:5m[1d])`),
+			ruleWithLabels("acm_rs:pod:cpu_limit", `max_over_time(acm_rs:pod:cpu_limit:5m[1d])`),
 			ruleWithLabels("acm_rs:pod:cpu_usage", `max_over_time(acm_rs:pod:cpu_usage:5m[1d])`),
 			ruleWithLabels(
 				"acm_rs:pod:cpu_recommendation",
 				fmt.Sprintf(`max_over_time(acm_rs:pod:cpu_usage:5m[1d]) * (%d/100)`, rp),
 			),
 			ruleWithLabels("acm_rs:pod:memory_request", `max_over_time(acm_rs:pod:memory_request:5m[1d])`),
+			ruleWithLabels("acm_rs:pod:memory_limit", `max_over_time(acm_rs:pod:memory_limit:5m[1d])`),
 			ruleWithLabels("acm_rs:pod:memory_usage", `max_over_time(acm_rs:pod:memory_usage:5m[1d])`),
 			ruleWithLabels(
 				"acm_rs:pod:memory_recommendation",
@@ -327,12 +373,14 @@ func buildWorkloadRules1d(
 	if workloadsEnabled {
 		rules = append(rules,
 			ruleWithLabels("acm_rs:workload:cpu_request", `max_over_time(acm_rs:workload:cpu_request:5m[1d])`),
+			ruleWithLabels("acm_rs:workload:cpu_limit", `max_over_time(acm_rs:workload:cpu_limit:5m[1d])`),
 			ruleWithLabels("acm_rs:workload:cpu_usage", `max_over_time(acm_rs:workload:cpu_usage:5m[1d])`),
 			ruleWithLabels(
 				"acm_rs:workload:cpu_recommendation",
 				fmt.Sprintf(`max_over_time(acm_rs:workload:cpu_usage:5m[1d]) * (%d/100)`, rp),
 			),
 			ruleWithLabels("acm_rs:workload:memory_request", `max_over_time(acm_rs:workload:memory_request:5m[1d])`),
+			ruleWithLabels("acm_rs:workload:memory_limit", `max_over_time(acm_rs:workload:memory_limit:5m[1d])`),
 			ruleWithLabels("acm_rs:workload:memory_usage", `max_over_time(acm_rs:workload:memory_usage:5m[1d])`),
 			ruleWithLabels(
 				"acm_rs:workload:memory_recommendation",

@@ -15,4 +15,3 @@ import (
 func CreateOrUpdateGPUPrometheusRulePolicy(ctx context.Context, c client.Client, prometheusRule monitoringv1.PrometheusRule) error {
 	return rsutility.CreateOrUpdateRSPrometheusRulePolicy(ctx, c, PrometheusRulePolicyName, ComponentState.Namespace, prometheusRule)
 }
-

@@ -45,4 +45,3 @@ func HandleRightSizing(ctx context.Context, c client.Client, mco *mcov1beta2.Mul
 	log.V(1).Info("rs - handling gpu right-sizing")
 	return rsutility.HandleComponentRightSizing(ctx, c, mco, componentConfig, ComponentState)
 }
-

@@ -1,0 +1,1048 @@
+# Synthetic GPU base metrics for ACM GPU right-sizing recording rules.
+#
+# *** AUTO-GENERATED — do not edit manually ***
+# Regenerate:
+#   python3 generate-gpu-mock-data.py --live-yaml gpu-base-metrics-mock-prometheusrule.yaml
+#
+# This manifest creates only INPUT metrics consumed by:
+# - operators/multiclusterobservability/controllers/analytics/rightsizing/rs-gpu/prometheusrule.go
+#
+# Notes:
+# - Values follow a 5-hour sinusoidal cycle (period = 18,000 seconds).
+# - Recording rules do not backfill historical data; keep this running for 5h to get a full 5h window.
+# - Metric spelling intentionally matches exporter input names, including:
+#     accelerator_temperature_celcius
+#
+# Apply:
+#   oc apply -f docs/rightsizing/gpu-base-metrics-mock-prometheusrule.yaml
+#
+# Cleanup:
+#   oc -n openshift-monitoring delete prometheusrule acm-gpu-base-metrics-mock
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: acm-gpu-base-metrics-mock
+  namespace: openshift-monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: acm-gpu-base-mock-owners.rules
+      interval: 1m
+      rules:
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+            owner_kind: ReplicaSet
+            owner_name: gpu-deploy-5f8d7f
+        - record: kube_replicaset_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            replicaset: gpu-deploy-5f8d7f
+            owner_kind: Deployment
+            owner_name: gpu-deploy
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+            owner_kind: StatefulSet
+            owner_name: gpu-sts
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+            owner_kind: DaemonSet
+            owner_name: gpu-ds
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+            owner_kind: ReplicaSet
+            owner_name: gpu-rs-standalone
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+            owner_kind: Job
+            owner_name: gpu-cj-28930200
+        - record: kube_job_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            job_name: gpu-cj-28930200
+            owner_kind: CronJob
+            owner_name: gpu-cj
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+            owner_kind: Job
+            owner_name: gpu-job-12345
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+            owner_kind: ReplicaSet
+            owner_name: llm-finetune-7a2c9e
+        - record: kube_replicaset_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            replicaset: llm-finetune-7a2c9e
+            owner_kind: Deployment
+            owner_name: llm-finetune
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+            owner_kind: StatefulSet
+            owner_name: bert-train
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+            owner_kind: Job
+            owner_name: data-preprocess
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+            owner_kind: ReplicaSet
+            owner_name: model-server-3b5d8f
+        - record: kube_replicaset_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            replicaset: model-server-3b5d8f
+            owner_kind: Deployment
+            owner_name: model-server
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+            owner_kind: StatefulSet
+            owner_name: triton-server
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+            owner_kind: Job
+            owner_name: batch-predict-cj-100
+        - record: kube_job_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            job_name: batch-predict-cj-100
+            owner_kind: CronJob
+            owner_name: batch-predict-cj
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+            owner_kind: ReplicaSet
+            owner_name: jupyter-nb-9c4f2a
+        - record: kube_replicaset_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            replicaset: jupyter-nb-9c4f2a
+            owner_kind: Deployment
+            owner_name: jupyter-nb
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+            owner_kind: Job
+            owner_name: rapids-etl
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+            owner_kind: ReplicaSet
+            owner_name: blender-render-6d3e1b
+        - record: kube_replicaset_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            replicaset: blender-render-6d3e1b
+            owner_kind: Deployment
+            owner_name: blender-render
+        - record: kube_pod_owner
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+            owner_kind: StatefulSet
+            owner_name: video-transcode
+
+    - name: acm-gpu-base-mock-requests.rules
+      interval: 1m
+      rules:
+        - record: kube_pod_container_resource_requests
+          expr: vector(2)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+            container: gpu-main
+            resource: amd.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+            container: gpu-main
+            resource: amd.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(4)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(2)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(2)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(2)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+            container: gpu-main
+            resource: nvidia.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(2)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+            container: gpu-main
+            resource: amd.com/gpu
+            unit: integer
+        - record: kube_pod_container_resource_requests
+          expr: vector(1)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+            container: gpu-main
+            resource: amd.com/gpu
+            unit: integer
+
+    - name: acm-gpu-base-mock-accelerator.rules
+      interval: 1m
+      rules:
+        # Utilization
+        - record: accelerator_gpu_utilization
+          expr: 70 + 15 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_gpu_utilization
+          expr: 58 + 12 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_gpu_utilization
+          expr: 52 + 10 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_gpu_utilization
+          expr: 41 + 9 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_gpu_utilization
+          expr: 36 + 14 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_gpu_utilization
+          expr: 29 + 7 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_gpu_utilization
+          expr: 88 + 8 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_gpu_utilization
+          expr: 65 + 12 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_gpu_utilization
+          expr: 30 + 8 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_gpu_utilization
+          expr: 55 + 10 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_gpu_utilization
+          expr: 48 + 14 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_gpu_utilization
+          expr: 40 + 18 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_gpu_utilization
+          expr: 25 + 12 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_gpu_utilization
+          expr: 60 + 20 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_gpu_utilization
+          expr: 78 + 10 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_gpu_utilization
+          expr: 50 + 15 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # Memory used (bytes)
+        - record: accelerator_memory_used_bytes
+          expr: 15032385536 + 2147483648 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 9663676416 + 1610612736 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_memory_used_bytes
+          expr: 8589934592 + 1288490188 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_memory_used_bytes
+          expr: 4294967296 + 858993459 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_memory_used_bytes
+          expr: 3758096384 + 1181116006 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 3006477107 + 751619277 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_memory_used_bytes
+          expr: 72000000000 + 5000000000 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 28000000000 + 3000000000 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_memory_used_bytes
+          expr: 10000000000 + 2000000000 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_memory_used_bytes
+          expr: 12000000000 + 1500000000 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 22000000000 + 4000000000 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_memory_used_bytes
+          expr: 8000000000 + 3000000000 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 8000000000 + 4000000000 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 56000000000 + 8000000000 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_memory_used_bytes
+          expr: 52000000000 + 6000000000 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_memory_used_bytes
+          expr: 20000000000 + 5000000000 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # Memory total (bytes)
+        - record: accelerator_memory_total_bytes
+          expr: vector(25769803776)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(17179869184)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_memory_total_bytes
+          expr: vector(17179869184)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_memory_total_bytes
+          expr: vector(8589934592)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_memory_total_bytes
+          expr: vector(8589934592)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(8589934592)
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_memory_total_bytes
+          expr: vector(85899345920)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(42949672960)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_memory_total_bytes
+          expr: vector(17179869184)
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_memory_total_bytes
+          expr: vector(17179869184)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(34359738368)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_memory_total_bytes
+          expr: vector(17179869184)
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(34359738368)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(85899345920)
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_memory_total_bytes
+          expr: vector(68719476736)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_memory_total_bytes
+          expr: vector(34359738368)
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # Power (watts)
+        - record: accelerator_power_usage_watts
+          expr: 215 + 25 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_power_usage_watts
+          expr: 175 + 20 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_power_usage_watts
+          expr: 160 + 18 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_power_usage_watts
+          expr: 135 + 16 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_power_usage_watts
+          expr: 145 + 22 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_power_usage_watts
+          expr: 120 + 12 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_power_usage_watts
+          expr: 310 + 30 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_power_usage_watts
+          expr: 250 + 20 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_power_usage_watts
+          expr: 55 + 10 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_power_usage_watts
+          expr: 60 + 8 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_power_usage_watts
+          expr: 200 + 25 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_power_usage_watts
+          expr: 50 + 12 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_power_usage_watts
+          expr: 120 + 30 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_power_usage_watts
+          expr: 290 + 35 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_power_usage_watts
+          expr: 280 + 28 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_power_usage_watts
+          expr: 180 + 22 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # Temperature (input metric spelling: celcius)
+        - record: accelerator_temperature_celcius
+          expr: 72 + 5 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_temperature_celcius
+          expr: 68 + 4 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_temperature_celcius
+          expr: 66 + 4 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_temperature_celcius
+          expr: 62 + 3 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_temperature_celcius
+          expr: 64 + 4.5 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_temperature_celcius
+          expr: 60 + 3 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_temperature_celcius
+          expr: 78 + 6 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_temperature_celcius
+          expr: 74 + 5 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_temperature_celcius
+          expr: 52 + 3 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_temperature_celcius
+          expr: 58 + 3 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_temperature_celcius
+          expr: 70 + 5 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_temperature_celcius
+          expr: 55 + 4 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_temperature_celcius
+          expr: 50 + 8 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_temperature_celcius
+          expr: 76 + 6 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_temperature_celcius
+          expr: 75 + 5 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_temperature_celcius
+          expr: 68 + 4 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # SM clock (hertz)
+        - record: accelerator_sm_clock_hertz
+          expr: 1450000000 + 90000000 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1380000000 + 70000000 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_sm_clock_hertz
+          expr: 1350000000 + 65000000 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_sm_clock_hertz
+          expr: 1280000000 + 50000000 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_sm_clock_hertz
+          expr: 1300000000 + 55000000 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1220000000 + 45000000 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_sm_clock_hertz
+          expr: 1530000000 + 50000000 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1480000000 + 70000000 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_sm_clock_hertz
+          expr: 1200000000 + 40000000 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_sm_clock_hertz
+          expr: 1290000000 + 35000000 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1400000000 + 60000000 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_sm_clock_hertz
+          expr: 1250000000 + 45000000 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1100000000 + 100000000 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1510000000 + 55000000 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_sm_clock_hertz
+          expr: 1700000000 + 80000000 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_sm_clock_hertz
+          expr: 1650000000 + 70000000 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0
+        # Memory clock (hertz)
+        - record: accelerator_memory_clock_hertz
+          expr: 5100000000 + 120000000 * sin(vector(time() * 0.000349066 + 0.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-deploy-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 4950000000 + 100000000 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-sts-0
+        - record: accelerator_memory_clock_hertz
+          expr: 4900000000 + 90000000 * sin(vector(time() * 0.000349066 + 1.6))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-ds-node1
+        - record: accelerator_memory_clock_hertz
+          expr: 4700000000 + 85000000 * sin(vector(time() * 0.000349066 + 2.4))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-rs-xyz
+        - record: accelerator_memory_clock_hertz
+          expr: 4750000000 + 95000000 * sin(vector(time() * 0.000349066 + 3.1))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-cj-28930200-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 4600000000 + 80000000 * sin(vector(time() * 0.000349066 + 3.9))
+          labels:
+            cluster: local-cluster
+            namespace: gpu-demo
+            pod: gpu-job-12345-xyz
+        - record: accelerator_memory_clock_hertz
+          expr: 5200000000 + 80000000 * sin(vector(time() * 0.000349066 + 0.3))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: llm-finetune-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 5050000000 + 100000000 * sin(vector(time() * 0.000349066 + 1.2))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: bert-train-0
+        - record: accelerator_memory_clock_hertz
+          expr: 4800000000 + 70000000 * sin(vector(time() * 0.000349066 + 2.5))
+          labels:
+            cluster: local-cluster
+            namespace: ai-training
+            pod: data-preprocess-xyz
+        - record: accelerator_memory_clock_hertz
+          expr: 4850000000 + 60000000 * sin(vector(time() * 0.000349066 + 0.7))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: model-server-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 5000000000 + 90000000 * sin(vector(time() * 0.000349066 + 1.8))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: triton-server-0
+        - record: accelerator_memory_clock_hertz
+          expr: 4750000000 + 75000000 * sin(vector(time() * 0.000349066 + 3.4))
+          labels:
+            cluster: local-cluster
+            namespace: inference-prod
+            pod: batch-predict-cj-100-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 4500000000 + 150000000 * sin(vector(time() * 0.000349066 + 0.5))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: jupyter-nb-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 5150000000 + 85000000 * sin(vector(time() * 0.000349066 + 2.1))
+          labels:
+            cluster: local-cluster
+            namespace: data-science
+            pod: rapids-etl-xyz
+        - record: accelerator_memory_clock_hertz
+          expr: 1600000000 + 50000000 * sin(vector(time() * 0.000349066 + 0.9))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: blender-render-abcde
+        - record: accelerator_memory_clock_hertz
+          expr: 1550000000 + 45000000 * sin(vector(time() * 0.000349066 + 2.7))
+          labels:
+            cluster: local-cluster
+            namespace: rendering
+            pod: video-transcode-0

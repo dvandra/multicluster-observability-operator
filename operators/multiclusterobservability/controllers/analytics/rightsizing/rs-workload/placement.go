@@ -15,4 +15,3 @@ import (
 func CreateUpdateWorkloadPlacement(ctx context.Context, c client.Client, placementConfig clusterv1beta1.Placement) error {
 	return rsutility.CreateUpdateRSPlacement(ctx, c, PlacementName, ComponentState.Namespace, placementConfig)
 }
-

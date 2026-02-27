@@ -33,4 +33,3 @@ func TestEnsureRSWorkloadConfigMapExists_CreatesIfNotExists(t *testing.T) {
 	assert.Contains(t, fetched.Data, "prometheusRuleConfig")
 	assert.Contains(t, fetched.Data, "placementConfiguration")
 }
-
