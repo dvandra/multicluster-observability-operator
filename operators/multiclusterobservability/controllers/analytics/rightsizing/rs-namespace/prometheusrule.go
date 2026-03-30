@@ -29,7 +29,7 @@ func GeneratePrometheusRule(configData rsutility.RSNamespaceConfigMapData) (moni
 
 	// Define durations
 	duration5m := monitoringv1.Duration("5m")
-	duration1d := monitoringv1.Duration("15m")
+	duration1d := monitoringv1.Duration("1h")
 
 	// Helper for rules
 	rule := func(record, metricExpr string) monitoringv1.Rule {

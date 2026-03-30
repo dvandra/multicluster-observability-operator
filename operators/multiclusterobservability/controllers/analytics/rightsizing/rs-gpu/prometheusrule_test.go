@@ -148,6 +148,108 @@ func TestGeneratePrometheusRule_IncludesGPUTypeRules(t *testing.T) {
 	}
 }
 
+func TestGeneratePrometheusRule_MemoryTotalUsesDCGMMetrics(t *testing.T) {
+	config := rsutility.RSNamespaceConfigMapData{
+		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{
+			NamespaceFilterCriteria: struct {
+				InclusionCriteria []string "yaml:\"inclusionCriteria\""
+				ExclusionCriteria []string "yaml:\"exclusionCriteria\""
+			}{
+				InclusionCriteria: []string{"ns-a"},
+			},
+			RecommendationPercentage: 110,
+		},
+	}
+
+	rule, err := GeneratePrometheusRuleWithMapping(config, true)
+	assert.NoError(t, err)
+
+	memoryTotalRules := map[string]string{}
+	for _, rg := range rule.Spec.Groups {
+		for _, r := range rg.Rules {
+			if r.Record == "acm_rs:namespace:gpu_memory_total:5m" ||
+				r.Record == "acm_rs:pod:gpu_memory_total:5m" ||
+				r.Record == "acm_rs:workload:gpu_memory_total:5m" ||
+				r.Record == "acm_rs:cluster:gpu_memory_total:5m" {
+				memoryTotalRules[r.Record] = r.Expr.String()
+			}
+		}
+	}
+
+	assert.Len(t, memoryTotalRules, 4, "expected 4 gpu_memory_total 5m rules")
+	for name, expr := range memoryTotalRules {
+		assert.Contains(t, expr, "DCGM_FI_DEV_FB_USED", "rule %s should use DCGM_FI_DEV_FB_USED", name)
+		assert.Contains(t, expr, "DCGM_FI_DEV_FB_FREE", "rule %s should use DCGM_FI_DEV_FB_FREE", name)
+		assert.NotContains(t, expr, "accelerator_memory_total_bytes",
+			"rule %s should not reference non-existent accelerator_memory_total_bytes", name)
+	}
+}
+
+func TestGeneratePrometheusRule_NoOrphanedGPUUtilizationRule(t *testing.T) {
+	config := rsutility.RSNamespaceConfigMapData{
+		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{
+			NamespaceFilterCriteria: struct {
+				InclusionCriteria []string "yaml:\"inclusionCriteria\""
+				ExclusionCriteria []string "yaml:\"exclusionCriteria\""
+			}{
+				InclusionCriteria: []string{"ns-a"},
+			},
+			RecommendationPercentage: 110,
+		},
+	}
+
+	rule, err := GeneratePrometheusRuleWithMapping(config, true)
+	assert.NoError(t, err)
+
+	for _, rg := range rule.Spec.Groups {
+		for _, r := range rg.Rules {
+			assert.NotEqual(t, "acm_rs:namespace:gpu_utilization:5m", r.Record,
+				"orphaned gpu_utilization:5m rule should not be present (no 1d rollup, not in allowlist)")
+		}
+	}
+}
+
+func TestGeneratePrometheusRule_AllDashboardMetricsProduced(t *testing.T) {
+	config := rsutility.RSNamespaceConfigMapData{
+		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{
+			NamespaceFilterCriteria: struct {
+				InclusionCriteria []string "yaml:\"inclusionCriteria\""
+				ExclusionCriteria []string "yaml:\"exclusionCriteria\""
+			}{
+				InclusionCriteria: []string{"ns-a"},
+			},
+			RecommendationPercentage: 110,
+		},
+	}
+
+	rule, err := GeneratePrometheusRuleWithMapping(config, true)
+	assert.NoError(t, err)
+
+	produced := map[string]bool{}
+	for _, rg := range rule.Spec.Groups {
+		for _, r := range rg.Rules {
+			produced[r.Record] = true
+		}
+	}
+
+	dashboardMetrics := []string{
+		"acm_rs:cluster:gpu_request", "acm_rs:cluster:gpu_usage", "acm_rs:cluster:gpu_recommendation",
+		"acm_rs:cluster:gpu_memory_used", "acm_rs:cluster:gpu_memory_total", "acm_rs:cluster:gpu_memory_recommendation",
+		"acm_rs:namespace:gpu_request", "acm_rs:namespace:gpu_usage", "acm_rs:namespace:gpu_recommendation",
+		"acm_rs:namespace:gpu_memory_used", "acm_rs:namespace:gpu_memory_total", "acm_rs:namespace:gpu_memory_recommendation",
+		"acm_rs:namespace:gpu_power_usage_watts", "acm_rs:namespace:gpu_temperature_celsius",
+		"acm_rs:namespace:gpu_sm_clock_hertz", "acm_rs:namespace:gpu_memory_clock_hertz", "acm_rs:namespace:gpu_type",
+		"acm_rs:workload:gpu_request", "acm_rs:workload:gpu_usage", "acm_rs:workload:gpu_recommendation",
+		"acm_rs:workload:gpu_memory_used", "acm_rs:workload:gpu_memory_total", "acm_rs:workload:gpu_memory_recommendation",
+		"acm_rs:pod:gpu_request", "acm_rs:pod:gpu_usage", "acm_rs:pod:gpu_recommendation",
+		"acm_rs:pod:gpu_memory_used", "acm_rs:pod:gpu_memory_total", "acm_rs:pod:gpu_memory_recommendation",
+	}
+
+	for _, metric := range dashboardMetrics {
+		assert.True(t, produced[metric], "dashboard metric %q has no corresponding recording rule", metric)
+	}
+}
+
 func TestGeneratePrometheusRule_IncludesWorkloadMappingForBatchControllers(t *testing.T) {
 	config := rsutility.RSNamespaceConfigMapData{
 		PrometheusRuleConfig: rsutility.RSPrometheusRuleConfig{

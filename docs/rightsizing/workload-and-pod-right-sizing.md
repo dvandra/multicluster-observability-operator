@@ -38,7 +38,7 @@ The workload/pod right-sizing recording rules are derived from these base metric
   - `role: alert-rules`
 - **Rule groups**:
   - `acm-right-sizing-workload-5m.rules` (interval `5m`): records “raw” 5m-window maxima
-  - `acm-right-sizing-workload-1d.rules` (interval `15m`): rolls up to “max over last 1 day” and produces recommendations
+  - `acm-right-sizing-workload-1d.rules` (interval `1h`): rolls up to “max over last 1 day” and produces recommendations
 
 ## Prometheus rules (record → PromQL)
 

@@ -33,7 +33,7 @@ func GeneratePrometheusRuleWithFeatures(
 	}
 
 	duration5m := monitoringv1.Duration("5m")
-	duration1d := monitoringv1.Duration("15m")
+	duration1d := monitoringv1.Duration("1h")
 
 	rule := func(record, metricExpr string) monitoringv1.Rule {
 		expr := metricExpr

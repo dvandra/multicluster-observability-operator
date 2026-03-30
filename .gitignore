@@ -99,3 +99,9 @@ results.xml
 registration-operator
 tmp
 .env
+
+# debug/mock data dumps
+docker-config.json
+prometheus_rules*
+*_rule_health.txt
+test_results.txt

@@ -31,7 +31,7 @@ func GeneratePrometheusRuleWithMapping(
 	}
 
 	duration5m := monitoringv1.Duration("5m")
-	duration1d := monitoringv1.Duration("15m")
+	duration1h := monitoringv1.Duration("1h")
 
 	rule := func(record, metricExpr string) monitoringv1.Rule {
 		expr := metricExpr
@@ -68,12 +68,12 @@ func GeneratePrometheusRuleWithMapping(
 		},
 		{
 			Name:     "acm-right-sizing-gpu-namespace-1d.rules",
-			Interval: &duration1d,
+			Interval: &duration1h,
 			Rules:    buildGPUNamespaceRules1d(configData, ruleWithLabels),
 		},
 		{
 			Name:     "acm-right-sizing-gpu-workload-1d.rules",
-			Interval: &duration1d,
+			Interval: &duration1h,
 			Rules:    buildGPUWorkloadPodRules1d(configData, ruleWithLabels),
 		},
 		{
@@ -83,7 +83,7 @@ func GeneratePrometheusRuleWithMapping(
 		},
 		{
 			Name:     "acm-right-sizing-gpu-cluster-1d.rules",
-			Interval: &duration1d,
+			Interval: &duration1h,
 			Rules:    buildGPUClusterRules1d(configData, ruleWithLabels),
 		},
 	}
@@ -124,13 +124,6 @@ func buildGPUNamespaceRules5m(
 			),
 		),
 		rule(
-			"acm_rs:namespace:gpu_utilization:5m",
-			fmt.Sprintf(
-				`max_over_time(max by (namespace) (accelerator_gpu_utilization{%s})[5m:])`,
-				nsFilter,
-			),
-		),
-		rule(
 			"acm_rs:namespace:gpu_memory_used:5m",
 			fmt.Sprintf(
 				`max_over_time(sum by (namespace) (accelerator_memory_used_bytes{%s})[5m:])`,
@@ -140,8 +133,8 @@ func buildGPUNamespaceRules5m(
 		rule(
 			"acm_rs:namespace:gpu_memory_total:5m",
 			fmt.Sprintf(
-				`max_over_time(sum by (namespace) (accelerator_memory_total_bytes{%s})[5m:])`,
-				nsFilter,
+				`max_over_time(sum by (namespace) ((DCGM_FI_DEV_FB_USED{%s} + DCGM_FI_DEV_FB_FREE{%s}))[5m:])`,
+				nsFilter, nsFilter,
 			),
 		),
 		rule(
@@ -154,7 +147,7 @@ func buildGPUNamespaceRules5m(
 		rule(
 			"acm_rs:namespace:gpu_temperature_celsius:5m",
 			fmt.Sprintf(
-				`max_over_time(max by (namespace) (accelerator_temperature_celcius{%s})[5m:])`,
+				`max_over_time(max by (namespace) (accelerator_temperature_celsius{%s})[5m:])`,
 				nsFilter,
 			),
 		),
@@ -331,11 +324,11 @@ func buildGPUWorkloadPodRules5m(
 			"acm_rs:pod:gpu_memory_total:5m",
 			fmt.Sprintf(
 				`max_over_time(sum by (namespace, pod, workload, workload_type) (
-				  accelerator_memory_total_bytes{%s}
+				  (DCGM_FI_DEV_FB_USED{%s} + DCGM_FI_DEV_FB_FREE{%s})
 				  * on (namespace, pod) group_left(workload, workload_type)
 				    acm_rs:pod_workload:relabel:5m
 				)[5m:])`,
-				nsFilter,
+				nsFilter, nsFilter,
 			),
 		),
 		rule(
@@ -353,7 +346,7 @@ func buildGPUWorkloadPodRules5m(
 			"acm_rs:pod:gpu_temperature_celsius:5m",
 			fmt.Sprintf(
 				`max_over_time(max by (namespace, pod, workload, workload_type) (
-				  accelerator_temperature_celcius{%s}
+				  accelerator_temperature_celsius{%s}
 				  * on (namespace, pod) group_left(workload, workload_type)
 				    acm_rs:pod_workload:relabel:5m
 				)[5m:])`,
@@ -423,11 +416,11 @@ func buildGPUWorkloadPodRules5m(
 			"acm_rs:workload:gpu_memory_total:5m",
 			fmt.Sprintf(
 				`max_over_time(sum by (namespace, workload, workload_type) (
-				  accelerator_memory_total_bytes{%s}
+				  (DCGM_FI_DEV_FB_USED{%s} + DCGM_FI_DEV_FB_FREE{%s})
 				  * on (namespace, pod) group_left(workload, workload_type)
 				    acm_rs:pod_workload:relabel:5m
 				)[5m:])`,
-				nsFilter,
+				nsFilter, nsFilter,
 			),
 		),
 		rule(
@@ -445,7 +438,7 @@ func buildGPUWorkloadPodRules5m(
 			"acm_rs:workload:gpu_temperature_celsius:5m",
 			fmt.Sprintf(
 				`max_over_time(max by (namespace, workload, workload_type) (
-				  accelerator_temperature_celcius{%s}
+				  accelerator_temperature_celsius{%s}
 				  * on (namespace, pod) group_left(workload, workload_type)
 				    acm_rs:pod_workload:relabel:5m
 				)[5m:])`,
@@ -577,8 +570,8 @@ func buildGPUClusterRules5m(
 		rule(
 			"acm_rs:cluster:gpu_memory_total:5m",
 			fmt.Sprintf(
-				`max_over_time(sum by (cluster) (accelerator_memory_total_bytes{%s})[5m:])`,
-				nsFilter,
+				`max_over_time(sum by (cluster) ((DCGM_FI_DEV_FB_USED{%s} + DCGM_FI_DEV_FB_FREE{%s}))[5m:])`,
+				nsFilter, nsFilter,
 			),
 		),
 		rule(
@@ -591,7 +584,7 @@ func buildGPUClusterRules5m(
 		rule(
 			"acm_rs:cluster:gpu_temperature_celsius:5m",
 			fmt.Sprintf(
-				`max_over_time(max by (cluster) (accelerator_temperature_celcius{%s})[5m:])`,
+				`max_over_time(max by (cluster) (accelerator_temperature_celsius{%s})[5m:])`,
 				nsFilter,
 			),
 		),

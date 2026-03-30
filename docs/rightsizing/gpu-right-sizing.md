@@ -28,7 +28,7 @@ GPU right-sizing recording rules are derived from these base metrics/series:
   - `accelerator_memory_used_bytes`
   - `accelerator_memory_total_bytes`
   - `accelerator_power_usage_watts`
-  - `accelerator_temperature_celcius` (note the exporter metric spelling: `celcius`)
+  - `accelerator_temperature_celsius`
   - `accelerator_sm_clock_hertz`
   - `accelerator_memory_clock_hertz`
 
@@ -42,10 +42,10 @@ GPU right-sizing recording rules are derived from these base metrics/series:
 - **Rule groups**:
   - `acm-right-sizing-gpu-namespace-5m.rules` (interval `5m`)
   - `acm-right-sizing-gpu-workload-5m.rules` (interval `5m`)
-  - `acm-right-sizing-gpu-namespace-1d.rules` (interval `15m`)
-  - `acm-right-sizing-gpu-workload-1d.rules` (interval `15m`)
+  - `acm-right-sizing-gpu-namespace-1d.rules` (interval `1h`)
+  - `acm-right-sizing-gpu-workload-1d.rules` (interval `1h`)
   - `acm-right-sizing-gpu-cluster-5m.rules` (interval `5m`)
-  - `acm-right-sizing-gpu-cluster-1d.rules` (interval `15m`)
+  - `acm-right-sizing-gpu-cluster-1d.rules` (interval `1h`)
 
 ## Prometheus rules (record → PromQL)
 
@@ -103,7 +103,7 @@ max_over_time(sum by (namespace) (accelerator_power_usage_watts{<NS_FILTER>})[5m
 - **`acm_rs:namespace:gpu_temperature_celsius:5m`**
 
 ```promql
-max_over_time(max by (namespace) (accelerator_temperature_celcius{<NS_FILTER>})[5m:])
+max_over_time(max by (namespace) (accelerator_temperature_celsius{<NS_FILTER>})[5m:])
 <LABEL_JOIN>
 ```
 
@@ -193,7 +193,7 @@ max_over_time(sum by (namespace, pod, workload, workload_type) (
 
 ```promql
 max_over_time(max by (namespace, pod, workload, workload_type) (
-  accelerator_temperature_celcius{<NS_FILTER>}
+  accelerator_temperature_celsius{<NS_FILTER>}
   * on (namespace, pod) group_left(workload, workload_type)
     acm_rs:pod_workload:relabel:5m
 )[5m:])
@@ -283,7 +283,7 @@ max_over_time(sum by (namespace, workload, workload_type) (
 
 ```promql
 max_over_time(max by (namespace, workload, workload_type) (
-  accelerator_temperature_celcius{<NS_FILTER>}
+  accelerator_temperature_celsius{<NS_FILTER>}
   * on (namespace, pod) group_left(workload, workload_type)
     acm_rs:pod_workload:relabel:5m
 )[5m:])
