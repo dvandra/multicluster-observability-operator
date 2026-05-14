@@ -6,6 +6,7 @@ package rendering
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"maps"
 	"net/url"
@@ -276,6 +277,23 @@ func (r *MCORenderer) renderAddonDeploymentConfig(
 			} else {
 				appendCustomVar(aodc, mcoutil.ADCKeyPlatformVirtualizationRightSizing, "disabled")
 			}
+
+			pred := cs.Platform.Analytics.Prediction
+			predEnabledVal := "false"
+			if pred.Enabled {
+				predEnabledVal = "true"
+			}
+			provBytes, err := json.Marshal(pred.Provider)
+			if err != nil {
+				return nil, fmt.Errorf("marshal prediction provider for ADC: %w", err)
+			}
+			cfgBytes, err := json.Marshal(pred.Config)
+			if err != nil {
+				return nil, fmt.Errorf("marshal prediction config for ADC: %w", err)
+			}
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPrediction, predEnabledVal)
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionProvider, string(provBytes))
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionConfig, string(cfgBytes))
 		}
 
 		if cs.UserWorkloads != nil {

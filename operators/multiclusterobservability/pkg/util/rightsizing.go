@@ -15,6 +15,10 @@ const (
 	// Right-sizing ADC key names — must match KeyPlatform* constants in MCOA repo.
 	ADCKeyPlatformNamespaceRightSizing      = "platformNamespaceRightSizing"
 	ADCKeyPlatformVirtualizationRightSizing = "platformVirtualizationRightSizing"
+
+	ADCKeyPlatformRightSizingPrediction         = "platformRightSizingPrediction"
+	ADCKeyPlatformRightSizingPredictionProvider = "platformRightSizingPredictionProvider"
+	ADCKeyPlatformRightSizingPredictionConfig   = "platformRightSizingPredictionConfig"
 )
 
 // IsRightSizingDelegated checks if the MCO CR has the right-sizing delegation

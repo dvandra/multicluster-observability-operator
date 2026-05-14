@@ -54,6 +54,7 @@ type AnalyticsReconciler struct {
 // +kubebuilder:rbac:groups=observability.open-cluster-management.io,resources=multiclusterobservabilities,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=observability.open-cluster-management.io,resources=multiclusterobservabilities/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=observability.open-cluster-management.io,resources=multiclusterobservabilities/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get
 
 // Reconcile handles reconciliation of right-sizing analytics resources based on the MCO lifecycle.
 func (r *AnalyticsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -331,8 +332,15 @@ func (r *AnalyticsReconciler) syncRightSizingStateToADC(ctx context.Context, ins
 		return fmt.Errorf("failed to get AddOnDeploymentConfig: %w", err)
 	}
 
+	// Prediction state sync is independent of delegatingToMCOA (unlike namespace/virtualization RS flags).
+	predEnabledStr, predProviderJSON, predConfigJSON, err := buildPredictionADCState(ctx, r.Client, instance)
+	if err != nil {
+		return err
+	}
+
 	// Single-pass: find indices and track if update needed
 	nsIdx, virtIdx := -1, -1
+	predEnIdx, predProvIdx, predCfgIdx := -1, -1, -1
 	needsUpdate := false
 
 	for i, cv := range adc.Spec.CustomizedVariables {
@@ -349,6 +357,24 @@ func (r *AnalyticsReconciler) syncRightSizingStateToADC(ctx context.Context, ins
 				adc.Spec.CustomizedVariables[i].Value = virtValue
 				needsUpdate = true
 			}
+		case util.ADCKeyPlatformRightSizingPrediction:
+			predEnIdx = i
+			if cv.Value != predEnabledStr {
+				adc.Spec.CustomizedVariables[i].Value = predEnabledStr
+				needsUpdate = true
+			}
+		case util.ADCKeyPlatformRightSizingPredictionProvider:
+			predProvIdx = i
+			if cv.Value != predProviderJSON {
+				adc.Spec.CustomizedVariables[i].Value = predProviderJSON
+				needsUpdate = true
+			}
+		case util.ADCKeyPlatformRightSizingPredictionConfig:
+			predCfgIdx = i
+			if cv.Value != predConfigJSON {
+				adc.Spec.CustomizedVariables[i].Value = predConfigJSON
+				needsUpdate = true
+			}
 		}
 	}
 
@@ -363,13 +389,30 @@ func (r *AnalyticsReconciler) syncRightSizingStateToADC(ctx context.Context, ins
 			addonv1alpha1.CustomizedVariable{Name: util.ADCKeyPlatformVirtualizationRightSizing, Value: virtValue})
 		needsUpdate = true
 	}
+	if predEnIdx == -1 {
+		adc.Spec.CustomizedVariables = append(adc.Spec.CustomizedVariables,
+			addonv1alpha1.CustomizedVariable{Name: util.ADCKeyPlatformRightSizingPrediction, Value: predEnabledStr})
+		needsUpdate = true
+	}
+	if predProvIdx == -1 {
+		adc.Spec.CustomizedVariables = append(adc.Spec.CustomizedVariables,
+			addonv1alpha1.CustomizedVariable{Name: util.ADCKeyPlatformRightSizingPredictionProvider, Value: predProviderJSON})
+		needsUpdate = true
+	}
+	if predCfgIdx == -1 {
+		adc.Spec.CustomizedVariables = append(adc.Spec.CustomizedVariables,
+			addonv1alpha1.CustomizedVariable{Name: util.ADCKeyPlatformRightSizingPredictionConfig, Value: predConfigJSON})
+		needsUpdate = true
+	}
 
 	if needsUpdate {
 		if delegatingToMCOA {
 			reqLogger.Info("rs - syncing right-sizing state to ADC for MCOA delegation",
-				"namespace", nsValue, "virtualization", virtValue)
+				"namespace", nsValue, "virtualization", virtValue,
+				"prediction", predEnabledStr)
 		} else {
-			reqLogger.V(1).Info("rs - syncing disabled state to ADC (MCO takes over)")
+			reqLogger.V(1).Info("rs - syncing disabled state to ADC (MCO takes over)",
+				"prediction", predEnabledStr)
 		}
 		if err := r.Client.Update(ctx, adc); err != nil {
 			return fmt.Errorf("failed to update AddOnDeploymentConfig: %w", err)
@@ -377,6 +420,91 @@ func (r *AnalyticsReconciler) syncRightSizingStateToADC(ctx context.Context, ins
 	}
 
 	return nil
+}
+
+// predictionProviderADCSync mirrors PredictionProviderSpec for AddOnDeploymentConfig JSON.
+// Hub-only externalAPIKeySecretRef is never sent to MCOA; when set, the referenced Secret
+// is resolved on the hub and the key material is sent as externalAPIKey.
+type predictionProviderADCSync struct {
+	Type                    string                       `json:"type,omitempty"`
+	ONNXModelConfigMapRef   *corev1.LocalObjectReference `json:"onnxModelConfigMapRef,omitempty"`
+	CustomEndpointURL       string                       `json:"customEndpointURL,omitempty"`
+	DataExfiltrationConsent bool                         `json:"dataExfiltrationConsent,omitempty"`
+	ExternalAPIKey          string                       `json:"externalAPIKey,omitempty"`
+}
+
+func extractPredictionAPIKeyFromSecret(sec *corev1.Secret) ([]byte, error) {
+	if len(sec.Data) == 0 {
+		return nil, fmt.Errorf("prediction external API key secret %q has no data keys", sec.Name)
+	}
+	preferred := []string{"api-key", "apiKey", "API_KEY", "token", "key"}
+	for _, k := range preferred {
+		if v, ok := sec.Data[k]; ok && len(v) > 0 {
+			return v, nil
+		}
+	}
+	if len(sec.Data) == 1 {
+		for _, v := range sec.Data {
+			if len(v) > 0 {
+				return v, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("prediction external API key secret %q: no recognized data key (expected one of %v or a single non-empty data entry)", sec.Name, preferred)
+}
+
+func buildPredictionADCState(ctx context.Context, c client.Client, instance *mcov1beta2.MultiClusterObservability) (enabledStr, providerJSON, configJSON string, err error) {
+	enabledStr = "false"
+	var pred mcov1beta2.PlatformPredictionSpec
+	if instance.Spec.Capabilities != nil && instance.Spec.Capabilities.Platform != nil {
+		pred = instance.Spec.Capabilities.Platform.Analytics.Prediction
+		if pred.Enabled {
+			enabledStr = "true"
+		}
+	}
+
+	cfgBytes, err := json.Marshal(pred.Config)
+	if err != nil {
+		return "", "", "", fmt.Errorf("marshal prediction config for ADC: %w", err)
+	}
+	configJSON = string(cfgBytes)
+
+	prov := pred.Provider
+	syncPayload := predictionProviderADCSync{
+		Type:                    prov.Type,
+		ONNXModelConfigMapRef:   prov.ONNXModelConfigMapRef,
+		CustomEndpointURL:       prov.CustomEndpointURL,
+		DataExfiltrationConsent: prov.DataExfiltrationConsent,
+	}
+	if prov.ExternalAPIKeySecretRef != nil && prov.ExternalAPIKeySecretRef.Name != "" {
+		hubNS := config.GetDefaultNamespace()
+		sec := &corev1.Secret{}
+		if err := c.Get(ctx, types.NamespacedName{Namespace: hubNS, Name: prov.ExternalAPIKeySecretRef.Name}, sec); err != nil {
+			if apierrors.IsNotFound(err) {
+				return "", "", "", fmt.Errorf("prediction external API key secret %q not found in namespace %q", prov.ExternalAPIKeySecretRef.Name, hubNS)
+			}
+			return "", "", "", fmt.Errorf("get prediction external API key secret %s/%s: %w", hubNS, prov.ExternalAPIKeySecretRef.Name, err)
+		}
+		key, err := extractPredictionAPIKeyFromSecret(sec)
+		if err != nil {
+			return "", "", "", err
+		}
+		syncPayload.ExternalAPIKey = string(key)
+	} else {
+		provBytes, mErr := json.Marshal(prov)
+		if mErr != nil {
+			return "", "", "", fmt.Errorf("marshal prediction provider for ADC: %w", mErr)
+		}
+		providerJSON = string(provBytes)
+		return enabledStr, providerJSON, configJSON, nil
+	}
+
+	provBytes, err := json.Marshal(syncPayload)
+	if err != nil {
+		return "", "", "", fmt.Errorf("marshal prediction provider for ADC: %w", err)
+	}
+	providerJSON = string(provBytes)
+	return enabledStr, providerJSON, configJSON, nil
 }
 
 // hasPolicyResourcesToCleanup checks whether any MCO-managed Policy resources

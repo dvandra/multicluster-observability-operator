@@ -1,55 +1,37 @@
-# Contributing guidelines
+# Contributing
 
-## Contributions
+## Development Setup
 
-All contributions to the repository must be submitted under the terms of the [Apache Public License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+1. Install Go 1.25+
+2. Clone the repo
+3. Build: `make build`
+4. Test: `make unit-tests`
+5. Lint: `make lint`
 
-## Certificate of Origin
+## Running Tests
 
-By contributing to this project you agree to the Developer Certificate of
-Origin (DCO). This document was created by the Linux Kernel community and is a
-simple statement that you, as a contributor, have the legal right to make the
-contribution. See the [DCO](DCO) file for details.
-
-## DCO Sign Off
-
-You must sign your commit to state that you certify the [DCO](DCO). To sign your commit, add a line like the following at the end of your commit message:
-
-```
-Signed-off-by: John Smith <john@example.com>
+```bash
+make unit-tests              # unit tests
+make e2e-tests               # E2E (requires oc login + hub cluster)
+make lint                    # linting
 ```
 
-This can be done with the `--signoff` option to `git commit`. See the [Git documentation](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt--s) for details. You can also mass sign-off a whole pull request with `git rebase --signoff main`, replacing `main` with the branch you are creating a pull request from.
+## Submitting Changes
 
-## Contributing A Patch
+1. Fork the repo and create a branch from `main`.
+2. API changes go in `operators/multiclusterobservability/api/v1beta2/`.
+3. Run `make manifests` after API type changes to regenerate CRDs.
+4. Run `make generate` after adding/changing controller interfaces.
+5. Run `make lint` before submitting PRs.
+6. Open a pull request with a clear description of what changed and why.
 
-1. Submit an issue describing your proposed change to the repo in question.
-1. The [repo owners](OWNERS) will respond to your issue promptly.
-1. Fork the desired repo, develop and test your code changes.
-1. Submit a pull request.
+## Code Style
 
-## Issue and Pull Request Management
+- Go 1.25+ idioms; monorepo with independent go.mod per sub-package
+- Import groups: stdlib, external, internal
+- Error handling: wrap with `%w`, handle once
+- CRD markers: `//+kubebuilder:validation` on API types
 
-Anyone may comment on issues and submit reviews for pull requests. However, in
-order to be assigned an issue or pull request, you must be a member of the
-[open-cluster-management](https://github.com/stolostron) GitHub organization.
+## Project Documentation
 
-Repo maintainers can assign you an issue or pull request by leaving a
-`/assign <your Github ID>` comment on the issue or pull request.
-
-## Pre-check before submitting a PR
-
-After your PR is ready to commit, please run following commands to check your code.
-
-```shell
-make -f Makefile.prow test-unit
-make -f Makefile.prow manager
-```
-
-## Build images
-
-Make sure your code build passed.
-
-```shell
-make docker-build -f Dockerfile.prow
-```
+See [docs/agents/](docs/agents/) for detailed architecture and subsystem documentation.

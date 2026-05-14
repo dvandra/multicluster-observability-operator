@@ -171,6 +171,12 @@ type PlatformAnalyticsSpec struct {
 	// +optional
 	// +kubebuilder:validation:Optional
 	GPURightSizingRecommendation PlatformRightSizingRecommendationSpec `json:"gpuRightSizingRecommendation,omitempty"`
+
+	// Prediction configures the prediction engine for right-sizing forecasting.
+	//
+	// +optional
+	// +kubebuilder:validation:Optional
+	Prediction PlatformPredictionSpec `json:"prediction,omitempty"`
 }
 
 type PlatformIncidentDetectionSpec struct {
@@ -194,6 +200,53 @@ type PlatformRightSizingRecommendationSpec struct {
 	// +optional
 	// +kubebuilder:validation:Optional
 	NamespaceBinding string `json:"namespaceBinding,omitempty"`
+}
+
+// PlatformPredictionSpec configures the prediction engine for right-sizing forecasting.
+type PlatformPredictionSpec struct {
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+	// +optional
+	Provider PredictionProviderSpec `json:"provider,omitempty"`
+	// +optional
+	Config PredictionConfigSpec `json:"config,omitempty"`
+}
+
+// PredictionProviderSpec configures which prediction provider to use.
+type PredictionProviderSpec struct {
+	// Type selects the prediction provider: builtin, onnx, external, or custom.
+	// +kubebuilder:validation:Enum=builtin;onnx;external;custom
+	// +kubebuilder:default=builtin
+	// +optional
+	Type string `json:"type,omitempty"`
+	// ONNXModelConfigMapRef references a ConfigMap containing the ONNX model.
+	// +optional
+	ONNXModelConfigMapRef *corev1.LocalObjectReference `json:"onnxModelConfigMapRef,omitempty"`
+	// ExternalAPIKeySecretRef references a Secret containing the external API key.
+	// +optional
+	ExternalAPIKeySecretRef *corev1.LocalObjectReference `json:"externalAPIKeySecretRef,omitempty"`
+	// CustomEndpointURL is the URL of a custom prediction model server.
+	// +optional
+	CustomEndpointURL string `json:"customEndpointURL,omitempty"`
+	// DataExfiltrationConsent must be true to allow data to leave the cluster (external/custom providers).
+	// +optional
+	DataExfiltrationConsent bool `json:"dataExfiltrationConsent,omitempty"`
+}
+
+// PredictionConfigSpec configures prediction engine behavior.
+type PredictionConfigSpec struct {
+	// TrainingIntervalHours is how often the model retrains (default: 6).
+	// +kubebuilder:default=6
+	// +optional
+	TrainingIntervalHours int `json:"trainingIntervalHours,omitempty"`
+	// HistoryDays is how many days of historical data to use for training (default: 30).
+	// +kubebuilder:default=30
+	// +optional
+	HistoryDays int `json:"historyDays,omitempty"`
+	// SafetyMarginPercent is the headroom added to forecasts (default: 115 = 15% headroom).
+	// +kubebuilder:default=115
+	// +optional
+	SafetyMarginPercent int `json:"safetyMarginPercent,omitempty"`
 }
 
 // ClusterLogForwarderSpec defines the spec for the addon to collect and forward logs

@@ -10757,6 +10757,88 @@ spec:
                                   The default namespace is `open-cluster-management-global-set`.
                                 type: string
                             type: object
+                          prediction:
+                            description: Prediction configures the prediction engine
+                              for right-sizing forecasting.
+                            properties:
+                              config:
+                                description: PredictionConfigSpec configures prediction
+                                  engine behavior.
+                                properties:
+                                  historyDays:
+                                    default: 30
+                                    description: 'HistoryDays is how many days of
+                                      historical data to use for training (default:
+                                      30).'
+                                    type: integer
+                                  safetyMarginPercent:
+                                    default: 115
+                                    description: 'SafetyMarginPercent is the headroom
+                                      added to forecasts (default: 115 = 15% headroom).'
+                                    type: integer
+                                  trainingIntervalHours:
+                                    default: 6
+                                    description: 'TrainingIntervalHours is how often
+                                      the model retrains (default: 6).'
+                                    type: integer
+                                type: object
+                              enabled:
+                                type: boolean
+                              provider:
+                                description: PredictionProviderSpec configures which
+                                  prediction provider to use.
+                                properties:
+                                  customEndpointURL:
+                                    description: CustomEndpointURL is the URL of a
+                                      custom prediction model server.
+                                    type: string
+                                  dataExfiltrationConsent:
+                                    description: DataExfiltrationConsent must be true
+                                      to allow data to leave the cluster (external/custom
+                                      providers).
+                                    type: boolean
+                                  externalAPIKeySecretRef:
+                                    description: ExternalAPIKeySecretRef references
+                                      a Secret containing the external API key.
+                                    properties:
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  onnxModelConfigMapRef:
+                                    description: ONNXModelConfigMapRef references
+                                      a ConfigMap containing the ONNX model.
+                                    properties:
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  type:
+                                    default: builtin
+                                    description: 'Type selects the prediction provider:
+                                      builtin, onnx, external, or custom.'
+                                    enum:
+                                    - builtin
+                                    - onnx
+                                    - external
+                                    - custom
+                                    type: string
+                                type: object
+                            type: object
                           virtualizationRightSizingRecommendation:
                             description: Feature to enable virtualization right-sizing
                               recommendation capabilities for the Analytics.
