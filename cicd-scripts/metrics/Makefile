@@ -74,10 +74,13 @@ check-virtualization-metrics:
 		--additional-scrape-configs=$(PLATFORM_DASH_DIR)/scrape-config.yaml,$(ALERTS_DASH_DIR)/scrape-config.yaml
 	@rm -d $(TMPDIR)/dash-metrics
 
+PREDICTION_METRICS = acm_rs:prediction_forecast_cpu,acm_rs:prediction_forecast_memory,acm_rs:prediction_forecast_workload_cpu,acm_rs:prediction_forecast_workload_memory,acm_rs:prediction_forecast_gpu_utilization,acm_rs:prediction_forecast_gpu_memory,acm_rs:prediction_forecast_vm_cpu,acm_rs:prediction_forecast_vm_memory,acm_rs:prediction_anomaly_score,acm_rs:prediction_anomaly_score_workload,acm_rs:prediction_anomaly_score_gpu,acm_rs:prediction_anomaly_score_vm,acm_rs:prediction_model_accuracy,acm_rs:prediction_ensemble_weight
+
 check-analytics-metrics: 
 	@echo "--> Checking analytics metrics:"
 	@$(CURDIR)/scripts/extract-dashboards-metrics.sh -d $(ANALYTICS_DASH_DIR) --preprocess "sed 's/\$$days/5m/g'"  | tr '\n' ',' > $(TMPDIR)/dash-metrics
 	@go run cmd/dashcheck/main.go --scrape-configs=$(ANALYTICS_DASH_DIR)/scrape-config.yaml \
+		--ignored-scrapeconfig-metrics=$(PREDICTION_METRICS) \
 		--dashboard-metrics=$$(cat $(TMPDIR)/dash-metrics) \
 		--additional-scrape-configs=$(PLATFORM_DASH_DIR)/scrape-config.yaml
 	@rm -d $(TMPDIR)/dash-metrics
