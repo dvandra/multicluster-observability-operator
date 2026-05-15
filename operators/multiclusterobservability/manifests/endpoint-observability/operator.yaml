@@ -57,10 +57,14 @@ spec:
             - name: hub-kubeconfig-secret
               mountPath: "/spoke/hub-kubeconfig"
               readOnly: true
+            - name: tmp
+              mountPath: "/tmp"
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: hub-kubeconfig-secret
           secret:
             secretName: observability-controller-hub-kubeconfig
