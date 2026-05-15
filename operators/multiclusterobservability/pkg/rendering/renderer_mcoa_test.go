@@ -217,7 +217,7 @@ func TestRenderAddonDeploymentConfig(t *testing.T) {
 	instrV1alpha1 := mcoconfig.GetMCOASupportedCRDFQDN(mcoconfig.InstrumentationCRDName)
 	promV1alpha1 := mcoconfig.GetMCOASupportedCRDFQDN(mcoconfig.PrometheusAgentCRDName)
 
-	assert.Len(t, got.Spec.CustomizedVariables, 12)
+	assert.Len(t, got.Spec.CustomizedVariables, 15)
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: namePlatformLogsCollection, Value: clfV1})
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: namePlatformIncidentDetection, Value: uipluginsCRDFQDN})
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: nameUserWorkloadLogsCollection, Value: clfV1})
@@ -231,6 +231,9 @@ func TestRenderAddonDeploymentConfig(t *testing.T) {
 	// Right-sizing variables are included when platform metrics is enabled
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformNamespaceRightSizing, Value: "disabled"})
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformVirtualizationRightSizing, Value: "disabled"})
+	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformRightSizingPrediction, Value: "disabled"})
+	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformRightSizingPredictionProvider, Value: ""})
+	assert.Contains(t, got.Spec.CustomizedVariables, addonv1alpha1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformRightSizingPredictionConfig, Value: "{}"})
 }
 
 func TestMCOAEnabled(t *testing.T) {
@@ -478,4 +481,30 @@ func TestRenderMCOATemplates(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRightSizingEnabled_PredictionOnly(t *testing.T) {
+	predOnly := &mcov1beta2.MultiClusterObservability{
+		Spec: mcov1beta2.MultiClusterObservabilitySpec{
+			Capabilities: &mcov1beta2.CapabilitiesSpec{
+				Platform: &mcov1beta2.PlatformCapabilitiesSpec{
+					Analytics: mcov1beta2.PlatformAnalyticsSpec{
+						Prediction: mcov1beta2.PlatformPredictionSpec{Enabled: true},
+					},
+				},
+			},
+		},
+	}
+	assert.True(t, rightSizingEnabled(predOnly))
+
+	none := &mcov1beta2.MultiClusterObservability{
+		Spec: mcov1beta2.MultiClusterObservabilitySpec{
+			Capabilities: &mcov1beta2.CapabilitiesSpec{
+				Platform: &mcov1beta2.PlatformCapabilitiesSpec{
+					Analytics: mcov1beta2.PlatformAnalyticsSpec{},
+				},
+			},
+		},
+	}
+	assert.False(t, rightSizingEnabled(none))
 }

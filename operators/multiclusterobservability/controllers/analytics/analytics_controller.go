@@ -14,10 +14,8 @@ import (
 	"github.com/go-logr/logr"
 	mcov1beta2 "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/api/v1beta2"
 	rightsizingctrl "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing"
-	rsgpu "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-gpu"
 	rsnamespace "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-namespace"
 	rsvirtualization "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-virtualization"
-	rsworkload "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/analytics/rightsizing/rs-workload"
 	mcoctrl "github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/controllers/multiclusterobservability"
 	"github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/pkg/config"
 	"github.com/stolostron/multicluster-observability-operator/operators/multiclusterobservability/pkg/util"
@@ -283,15 +281,11 @@ func (r *AnalyticsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	mcoPred := mcoctrl.GetMCOPredicateFunc()
 	cmNamespaceRSPred := rightsizingctrl.GetNamespaceRSConfigMapPredicateFunc(ctx, c)
 	cmVirtualizationRSPred := rightsizingctrl.GetVirtualizationRSConfigMapPredicateFunc(ctx, c)
-	cmWorkloadRSPred := rightsizingctrl.GetWorkloadRSConfigMapPredicateFunc(ctx, c)
-	cmGPURSPred := rightsizingctrl.GetGPURSConfigMapPredicateFunc(ctx, c)
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("rightsizing").
 		For(&mcov1beta2.MultiClusterObservability{}, builder.WithPredicates(mcoPred)).
 		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmNamespaceRSPred)).
 		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmVirtualizationRSPred)).
-		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmWorkloadRSPred)).
-		Watches(&corev1.ConfigMap{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(cmGPURSPred)).
 		Complete(r)
 }
 
@@ -422,17 +416,6 @@ func (r *AnalyticsReconciler) syncRightSizingStateToADC(ctx context.Context, ins
 	return nil
 }
 
-// predictionProviderADCSync mirrors PredictionProviderSpec for AddOnDeploymentConfig JSON.
-// Hub-only externalAPIKeySecretRef is never sent to MCOA; when set, the referenced Secret
-// is resolved on the hub and the key material is sent as externalAPIKey.
-type predictionProviderADCSync struct {
-	Type                    string                       `json:"type,omitempty"`
-	ONNXModelConfigMapRef   *corev1.LocalObjectReference `json:"onnxModelConfigMapRef,omitempty"`
-	CustomEndpointURL       string                       `json:"customEndpointURL,omitempty"`
-	DataExfiltrationConsent bool                         `json:"dataExfiltrationConsent,omitempty"`
-	ExternalAPIKey          string                       `json:"externalAPIKey,omitempty"`
-}
-
 func extractPredictionAPIKeyFromSecret(sec *corev1.Secret) ([]byte, error) {
 	if len(sec.Data) == 0 {
 		return nil, fmt.Errorf("prediction external API key secret %q has no data keys", sec.Name)
@@ -453,58 +436,36 @@ func extractPredictionAPIKeyFromSecret(sec *corev1.Secret) ([]byte, error) {
 	return nil, fmt.Errorf("prediction external API key secret %q: no recognized data key (expected one of %v or a single non-empty data entry)", sec.Name, preferred)
 }
 
-func buildPredictionADCState(ctx context.Context, c client.Client, instance *mcov1beta2.MultiClusterObservability) (enabledStr, providerJSON, configJSON string, err error) {
-	enabledStr = "false"
+func buildPredictionADCState(ctx context.Context, c client.Client, instance *mcov1beta2.MultiClusterObservability) (enabledStr, providerStr, configJSON string, err error) {
 	var pred mcov1beta2.PlatformPredictionSpec
 	if instance.Spec.Capabilities != nil && instance.Spec.Capabilities.Platform != nil {
 		pred = instance.Spec.Capabilities.Platform.Analytics.Prediction
-		if pred.Enabled {
-			enabledStr = "true"
-		}
 	}
+	enabledStr = util.PredictionADCEnabledValue(pred.Enabled)
+	providerStr = util.PredictionADCProviderValue(pred)
 
-	cfgBytes, err := json.Marshal(pred.Config)
-	if err != nil {
-		return "", "", "", fmt.Errorf("marshal prediction config for ADC: %w", err)
-	}
-	configJSON = string(cfgBytes)
-
-	prov := pred.Provider
-	syncPayload := predictionProviderADCSync{
-		Type:                    prov.Type,
-		ONNXModelConfigMapRef:   prov.ONNXModelConfigMapRef,
-		CustomEndpointURL:       prov.CustomEndpointURL,
-		DataExfiltrationConsent: prov.DataExfiltrationConsent,
-	}
-	if prov.ExternalAPIKeySecretRef != nil && prov.ExternalAPIKeySecretRef.Name != "" {
+	extKey := ""
+	if pred.Enabled && pred.Provider.ExternalAPIKeySecretRef != nil && pred.Provider.ExternalAPIKeySecretRef.Name != "" {
 		hubNS := config.GetDefaultNamespace()
 		sec := &corev1.Secret{}
-		if err := c.Get(ctx, types.NamespacedName{Namespace: hubNS, Name: prov.ExternalAPIKeySecretRef.Name}, sec); err != nil {
+		if err := c.Get(ctx, types.NamespacedName{Namespace: hubNS, Name: pred.Provider.ExternalAPIKeySecretRef.Name}, sec); err != nil {
 			if apierrors.IsNotFound(err) {
-				return "", "", "", fmt.Errorf("prediction external API key secret %q not found in namespace %q", prov.ExternalAPIKeySecretRef.Name, hubNS)
+				return "", "", "", fmt.Errorf("prediction external API key secret %q not found in namespace %q", pred.Provider.ExternalAPIKeySecretRef.Name, hubNS)
 			}
-			return "", "", "", fmt.Errorf("get prediction external API key secret %s/%s: %w", hubNS, prov.ExternalAPIKeySecretRef.Name, err)
+			return "", "", "", fmt.Errorf("get prediction external API key secret %s/%s: %w", hubNS, pred.Provider.ExternalAPIKeySecretRef.Name, err)
 		}
 		key, err := extractPredictionAPIKeyFromSecret(sec)
 		if err != nil {
 			return "", "", "", err
 		}
-		syncPayload.ExternalAPIKey = string(key)
-	} else {
-		provBytes, mErr := json.Marshal(prov)
-		if mErr != nil {
-			return "", "", "", fmt.Errorf("marshal prediction provider for ADC: %w", mErr)
-		}
-		providerJSON = string(provBytes)
-		return enabledStr, providerJSON, configJSON, nil
+		extKey = string(key)
 	}
 
-	provBytes, err := json.Marshal(syncPayload)
+	configJSON, err = util.BuildPredictionADCConfigJSON(pred, extKey)
 	if err != nil {
-		return "", "", "", fmt.Errorf("marshal prediction provider for ADC: %w", err)
+		return "", "", "", err
 	}
-	providerJSON = string(provBytes)
-	return enabledStr, providerJSON, configJSON, nil
+	return enabledStr, providerStr, configJSON, nil
 }
 
 // hasPolicyResourcesToCleanup checks whether any MCO-managed Policy resources
@@ -518,8 +479,6 @@ func (r *AnalyticsReconciler) hasPolicyResourcesToCleanup(ctx context.Context) (
 	}{
 		{rsnamespace.PrometheusRulePolicyName, rsnamespace.ComponentState.Namespace},
 		{rsvirtualization.PrometheusRulePolicyName, rsvirtualization.ComponentState.Namespace},
-		{rsworkload.PrometheusRulePolicyName, rsworkload.ComponentState.Namespace},
-		{rsgpu.PrometheusRulePolicyName, rsgpu.ComponentState.Namespace},
 	}
 
 	for _, check := range checks {

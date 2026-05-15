@@ -6,7 +6,6 @@ package rendering
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"maps"
 	"net/url"
@@ -279,21 +278,13 @@ func (r *MCORenderer) renderAddonDeploymentConfig(
 			}
 
 			pred := cs.Platform.Analytics.Prediction
-			predEnabledVal := "false"
-			if pred.Enabled {
-				predEnabledVal = "true"
-			}
-			provBytes, err := json.Marshal(pred.Provider)
-			if err != nil {
-				return nil, fmt.Errorf("marshal prediction provider for ADC: %w", err)
-			}
-			cfgBytes, err := json.Marshal(pred.Config)
+			cfgStr, err := mcoutil.BuildPredictionADCConfigJSON(pred, "")
 			if err != nil {
 				return nil, fmt.Errorf("marshal prediction config for ADC: %w", err)
 			}
-			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPrediction, predEnabledVal)
-			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionProvider, string(provBytes))
-			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionConfig, string(cfgBytes))
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPrediction, mcoutil.PredictionADCEnabledValue(pred.Enabled))
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionProvider, mcoutil.PredictionADCProviderValue(pred))
+			appendCustomVar(aodc, mcoutil.ADCKeyPlatformRightSizingPredictionConfig, cfgStr)
 		}
 
 		if cs.UserWorkloads != nil {
@@ -388,13 +379,15 @@ func (r *MCORenderer) renderMCOATemplates(
 }
 
 // rightSizingEnabled returns true if at least one right-sizing feature
-// (namespace or virtualization) is enabled in the MCO CR spec.
+// (namespace, virtualization, or prediction) is enabled in the MCO CR spec.
 func rightSizingEnabled(cr *obv1beta2.MultiClusterObservability) bool {
 	if cr.Spec.Capabilities == nil || cr.Spec.Capabilities.Platform == nil {
 		return false
 	}
-	return cr.Spec.Capabilities.Platform.Analytics.NamespaceRightSizingRecommendation.Enabled ||
-		cr.Spec.Capabilities.Platform.Analytics.VirtualizationRightSizingRecommendation.Enabled
+	a := cr.Spec.Capabilities.Platform.Analytics
+	return a.NamespaceRightSizingRecommendation.Enabled ||
+		a.VirtualizationRightSizingRecommendation.Enabled ||
+		a.Prediction.Enabled
 }
 
 // MCOAEnabled returns true if any non-right-sizing MCOA capability is enabled.

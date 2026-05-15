@@ -478,6 +478,9 @@ func TestSyncRightSizingStateToADC_NoUpdateWhenValuesMatch(t *testing.T) {
 			CustomizedVariables: []addonv1alpha1.CustomizedVariable{
 				{Name: util.ADCKeyPlatformNamespaceRightSizing, Value: "enabled"},
 				{Name: util.ADCKeyPlatformVirtualizationRightSizing, Value: "disabled"},
+				{Name: util.ADCKeyPlatformRightSizingPrediction, Value: "disabled"},
+				{Name: util.ADCKeyPlatformRightSizingPredictionProvider, Value: ""},
+				{Name: util.ADCKeyPlatformRightSizingPredictionConfig, Value: "{}"},
 			},
 		},
 	}
