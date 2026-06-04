@@ -21,6 +21,10 @@ data:
       - acm_rs:cluster:memory_request
       - acm_rs:cluster:memory_usage
       - acm_rs:cluster:memory_recommendation
+      - acm_rs:namespace:cpu_limit
+      - acm_rs:namespace:memory_limit
+      - acm_rs:cluster:cpu_limit
+      - acm_rs:cluster:memory_limit
       - acm_rs_vm:namespace:cpu_request
       - acm_rs_vm:namespace:cpu_usage
       - acm_rs_vm:namespace:cpu_recommendation
