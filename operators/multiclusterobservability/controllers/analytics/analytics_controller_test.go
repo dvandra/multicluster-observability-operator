@@ -435,6 +435,7 @@ func TestReconcile_MigrationSetsFlag(t *testing.T) {
 	require.Equal(t, "true", adcVars[util.ADCKeyRightSizingDelegated])
 	require.Equal(t, "enabled", adcVars[util.ADCKeyPlatformNamespaceRightSizing])
 	require.Equal(t, "enabled", adcVars[util.ADCKeyPlatformVirtualizationRightSizing])
+	require.Equal(t, "disabled", adcVars[util.ADCKeyPlatformWorkloadPodRightSizing])
 }
 
 func TestSyncRightSizingStateToADC_DelegatingEnabled(t *testing.T) {

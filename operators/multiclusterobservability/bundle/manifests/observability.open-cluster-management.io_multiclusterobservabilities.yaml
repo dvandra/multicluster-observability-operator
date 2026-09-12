@@ -10828,6 +10828,22 @@ spec:
                                   The default namespace is `open-cluster-management-global-set
                                 type: string
                             type: object
+                          workloadPodRightSizingRecommendation:
+                            description: |-
+                              Feature to enable workload and pod right-sizing recommendation capabilities for the Analytics.
+                              Disabled by default; enable explicitly via the MCO CR and ADC key
+                              platformWorkloadPodRightSizing=enabled.
+                            properties:
+                              enabled:
+                                description: Enabled defines a flag to enable/disable
+                                  the right-sizing feature for the Analytics.
+                                type: boolean
+                              namespaceBinding:
+                                description: |-
+                                  NamespaceBinding defines the namespace where all the required resources are created.
+                                  The default namespace is `open-cluster-management-global-set
+                                type: string
+                            type: object
                         type: object
                       logs:
                         description: |-

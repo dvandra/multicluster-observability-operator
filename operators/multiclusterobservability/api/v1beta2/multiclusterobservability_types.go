@@ -172,6 +172,14 @@ type PlatformAnalyticsSpec struct {
 	// +optional
 	// +kubebuilder:validation:Optional
 	VirtualizationRightSizingRecommendation PlatformRightSizingRecommendationSpec `json:"virtualizationRightSizingRecommendation,omitempty"`
+
+	// Feature to enable workload and pod right-sizing recommendation capabilities for the Analytics.
+	// Disabled by default; enable explicitly via the MCO CR and ADC key
+	// platformWorkloadPodRightSizing=enabled.
+	//
+	// +optional
+	// +kubebuilder:validation:Optional
+	WorkloadPodRightSizingRecommendation PlatformRightSizingRecommendationSpec `json:"workloadPodRightSizingRecommendation,omitempty"`
 }
 
 type PlatformIncidentDetectionSpec struct {
