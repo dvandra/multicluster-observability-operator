@@ -292,7 +292,7 @@ func (r *MCORenderer) renderAddonDeploymentConfig(
 			} else {
 				appendCustomVar(aodc, mcoutil.ADCKeyPlatformVirtualizationRightSizing, "disabled")
 			}
-			if delegated && cs.Platform.Analytics.WorkloadPodRightSizingRecommendation.Enabled {
+			if cs.Platform.Analytics.WorkloadPodRightSizingRecommendation.Enabled {
 				appendCustomVar(aodc, mcoutil.ADCKeyPlatformWorkloadPodRightSizing, "enabled")
 			} else {
 				appendCustomVar(aodc, mcoutil.ADCKeyPlatformWorkloadPodRightSizing, "disabled")

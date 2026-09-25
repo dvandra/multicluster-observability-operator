@@ -169,6 +169,9 @@ func TestRenderAddonDeploymentConfig(t *testing.T) {
 						IncidentDetection: mcov1beta2.PlatformIncidentDetectionSpec{
 							Enabled: true,
 						},
+						WorkloadPodRightSizingRecommendation: mcov1beta2.PlatformRightSizingRecommendationSpec{
+							Enabled: true,
+						},
 					},
 				},
 				UserWorkloads: &mcov1beta2.UserWorkloadCapabilitiesSpec{
@@ -233,7 +236,7 @@ func TestRenderAddonDeploymentConfig(t *testing.T) {
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1beta1.CustomizedVariable{Name: mcoutil.ADCKeyRightSizingDelegated, Value: "true"})
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1beta1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformNamespaceRightSizing, Value: "disabled"})
 	assert.Contains(t, got.Spec.CustomizedVariables, addonv1beta1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformVirtualizationRightSizing, Value: "disabled"})
-	assert.Contains(t, got.Spec.CustomizedVariables, addonv1beta1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformWorkloadPodRightSizing, Value: "disabled"})
+	assert.Contains(t, got.Spec.CustomizedVariables, addonv1beta1.CustomizedVariable{Name: mcoutil.ADCKeyPlatformWorkloadPodRightSizing, Value: "enabled"})
 }
 
 func TestRenderAddonDeploymentConfig_AlertsEnabled(t *testing.T) {
